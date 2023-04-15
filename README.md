@@ -1,2 +1,2 @@
 # pixel-wold-simulation
-Recreaction of Noita, using JS
+Recreation of Noita, using JS

@@ -1,0 +1,56 @@
+{
+  "name": "pixel-world-simulation",
+  "version": "1.0.0",
+  "description": "Recreation of Noita, using JS",
+  "main": "index.ts",
+  "private": true,
+  "browserslist": [
+    "defaults",
+    "> 1%",
+    "not dead"
+  ],
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development webpack --mode development",
+    "build": "cross-env NODE_ENV=production webpack --mode production",
+    "watch": "cross-env NODE_ENV=development webpack --mode development --watch",
+    "start": "cross-env NODE_ENV=development webpack serve --mode development",
+    "lint": "eslint --ext .ts,.tsx src",
+    "fix": "eslint --fix --ext .ts,.tsx src"
+  },
+  "bugs": {
+    "url": "https://github.com/thirdmadman/pixel-world-simulation/issues"
+  },
+  "homepage": "https://github.com/thirdmadman/pixel-world-simulation#readme",
+  "author": "thirdmadman",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@types/node": "^17.0.0",
+    "@types/webpack": "^5.28.0",
+    "@types/webpack-dev-server": "^4.5.0",
+    "@typescript-eslint/eslint-plugin": "^5.5.0",
+    "@typescript-eslint/parser": "^5.5.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^10.2.0",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.5.1",
+    "css-minimizer-webpack-plugin": "^3.2.0",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^19.0.2",
+    "eslint-config-airbnb-typescript": "^16.1.0",
+    "eslint-webpack-plugin": "^3.1.1",
+    "file-loader": "^6.2.0",
+    "html-loader": "^3.0.1",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.4.5",
+    "sass": "^1.44.0",
+    "sass-loader": "^12.3.0",
+    "style-loader": "^3.3.1",
+    "terser-webpack-plugin": "^5.2.5",
+    "ts-loader": "^9.2.6",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.6.0"
+  }
+}
