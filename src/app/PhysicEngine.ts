@@ -188,7 +188,7 @@ export default class PhysicEngine {
           processUnits(x, y);
         }
       } else {
-        for (let x = worldSideSize - 1; x > 0; x -= 1) {
+        for (let x = worldSideSize - 1; x >= 0; x -= 1) {
           processUnits(x, y);
         }
       }
