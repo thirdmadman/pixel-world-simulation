@@ -123,14 +123,18 @@ export default class Engine {
           break;
       }
 
-      return new Unit({
-        unitHealth: 1,
-        unitIsGas: false,
-        unitIsFlammable: false,
-        unitIsLiquid,
-        unitIsStatic,
-        unitColor,
-      }, null, this.lastUnitId++);
+      return new Unit(
+        {
+          unitHealth: 1,
+          unitIsGas: false,
+          unitIsFlammable: false,
+          unitIsLiquid,
+          unitIsStatic,
+          unitColor,
+        },
+        null,
+        this.lastUnitId++,
+      );
     };
 
     if (squareSize > 0) {
@@ -140,8 +144,10 @@ export default class Engine {
       for (let y = 0; y < squareSize; y += 1) {
         for (let x = 0; x < squareSize; x += 1) {
           const generatedUnit = generateNewUnit();
-          if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
-            this.gameWorldState[squareStartX + x][squareStartY + y] = generatedUnit;
+          if (squareStartX + x < this.worldSquareSide && squareStartY + y < this.worldSquareSide) {
+            if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
+              this.gameWorldState[squareStartX + x][squareStartY + y] = generatedUnit;
+            }
           }
         }
       }
