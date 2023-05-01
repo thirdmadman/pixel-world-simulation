@@ -106,7 +106,6 @@ export default class Engine {
           unitColor += 0x00caca + 0xff000000 + resColor;
           break;
         }
-
         case 2: {
           unitIsStatic = true;
           const randColor = getRandomInt(0x0a, 0x52);
@@ -151,8 +150,12 @@ export default class Engine {
           }
         }
       }
-    } else if (!this.gameWorldState[mousePosition.x][mousePosition.y]) {
-      this.gameWorldState[mousePosition.x][mousePosition.y] = generateNewUnit();
+      return;
+    }
+
+    const generatedUnit = generateNewUnit();
+    if (!this.gameWorldState[mousePosition.x][mousePosition.y] || generatedUnit === null) {
+      this.gameWorldState[mousePosition.x][mousePosition.y] = generatedUnit;
     }
   }
 
