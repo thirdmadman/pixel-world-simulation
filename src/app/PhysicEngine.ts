@@ -56,27 +56,17 @@ export default class PhysicEngine {
           if (currentWorld[x][y - 1]?.unitType.unitIsLiquid) {
             if (y < worldSideSize - 1) {
               if (!currentWorld[x][y + 1]) {
-                const tmp = currentWorld[x][y - 1];
-                currentWorld[x][y - 1] = currentWorld[x][y];
-                currentWorld[x][y] = tmp;
+                replaceUnit(x, y, x, y - 1);
               } else if (x > 0 && !currentWorld[x - 1][y]) {
-                const tmp = currentWorld[x - 1][y];
-                currentWorld[x - 1][y] = currentWorld[x][y];
-                currentWorld[x][y] = tmp;
+                replaceUnit(x, y, x - 1, y);
               } else if (x < worldSideSize - 1 && !currentWorld[x + 1][y]) {
-                const tmp = currentWorld[x + 1][y];
-                currentWorld[x + 1][y] = currentWorld[x][y];
-                currentWorld[x][y] = tmp;
+                replaceUnit(x, y, x + 1, y);
               } else {
-                const tmp = currentWorld[x][y - 1];
-                currentWorld[x][y - 1] = currentWorld[x][y];
-                currentWorld[x][y] = tmp;
+                replaceUnit(x, y, x, y - 1);
               }
             }
           } else if (!currentWorld[x][y - 1]) {
-            currentWorld[x][y - 1] = currentWorld[x][y];
-            currentWorld[x][y - 1]!.isUpdated = true;
-            currentWorld[x][y] = null;
+            replaceUnit(x, y, x, y - 1);
           }
         } else if ((isUnderDiagonalFreeOrLiquids) && (isLeftAndRightFreeOrLiquids)) {
           const dir = getRandomInt(0, 1);
@@ -177,22 +167,22 @@ export default class PhysicEngine {
       // isReverseDirection = !isReverseDirection;
     }
 
-    for (let y = 0; y < worldSideSize; y += 1) {
-      for (let x = 0; x < worldSideSize; x += 1) {
-        if (currentWorld[x][y] != null) {
-          for (let y2 = 0; y2 < worldSideSize; y2 += 1) {
-            for (let x2 = 0; x2 < worldSideSize; x2 += 1) {
-              if (currentWorld[x][y] != null) {
-                if (x2 !== x && y2 !== y && currentWorld[x2][y2]?.unitId === currentWorld[x][y]?.unitId) {
-                  console.error('this is copy');
-                  currentWorld[x2][y2] = null;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    // for (let y = 0; y < worldSideSize; y += 1) {
+    //   for (let x = 0; x < worldSideSize; x += 1) {
+    //     if (currentWorld[x][y] != null) {
+    //       for (let y2 = 0; y2 < worldSideSize; y2 += 1) {
+    //         for (let x2 = 0; x2 < worldSideSize; x2 += 1) {
+    //           if (currentWorld[x][y] != null) {
+    //             if (x2 !== x && y2 !== y && currentWorld[x2][y2]?.unitId === currentWorld[x][y]?.unitId) {
+    //               console.error('this is copy');
+    //               currentWorld[x2][y2] = null;
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
     return currentWorld;
   }
