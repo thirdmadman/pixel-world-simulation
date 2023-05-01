@@ -88,11 +88,11 @@ export class App {
     this.canvas.addEventListener(
       'wheel',
       (e) => {
-        if (e.deltaY < 0) {
+        if (-e.deltaY < 0) {
           if (this.pointerSquareSize > 0) {
             this.pointerSquareSize -= 1;
           }
-        } else if (e.deltaY > 0) {
+        } else if (-e.deltaY > 0) {
           if (this.pointerSquareSize < this.frameHeight * 2) {
             this.pointerSquareSize += 1;
           }
