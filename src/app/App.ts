@@ -25,7 +25,7 @@ export class App {
 
   private virtualMousePosition = { x: 0, y: 0 } as Point;
 
-  private matterType = 0;
+  private matterType = 3;
 
   private pointerSquareSize = 0;
 
@@ -147,7 +147,7 @@ export class App {
       'mousedown',
       (e) => {
         if (e.button === 1) {
-          if (this.matterType < 3) {
+          if (this.matterType < 4) {
             this.matterType += 1;
           } else {
             this.matterType = 0;
@@ -220,7 +220,7 @@ export class App {
   startRender() {
     const callRender = () => {
       if (!this.isPause) {
-        if (Date.now() - this.lastFrame >= 12) {
+        if (Date.now() - this.lastFrame >= 15) {
           this.renderer.setPixels(
             this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
           );

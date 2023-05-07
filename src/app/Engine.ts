@@ -93,6 +93,7 @@ export default class Engine {
       let unitIsLiquid = false;
       let unitColor = 0;
       let unitIsStatic = false;
+      let unitIsGas = false;
 
       switch (unitType) {
         case 0: {
@@ -115,6 +116,14 @@ export default class Engine {
         }
 
         case 3: {
+          unitIsGas = true;
+          const randColor = getRandomInt(0x0a, 0x52);
+          const resColor = randColor + randColor * 16 ** 2 + randColor * 16 ** 4;
+          unitColor += 0x11aa00 + 0x33000000 + resColor;
+          break;
+        }
+
+        case 4: {
           return null;
         }
 
@@ -125,7 +134,7 @@ export default class Engine {
       return new Unit(
         {
           unitHealth: 1,
-          unitIsGas: false,
+          unitIsGas,
           unitIsFlammable: false,
           unitIsLiquid,
           unitIsStatic,
