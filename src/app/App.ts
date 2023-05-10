@@ -31,8 +31,6 @@ export class App {
 
   private isPause = false;
 
-  private lastFrame = 0;
-
   constructor() {
     document.body.appendChild(this.canvas);
 
@@ -218,21 +216,20 @@ export class App {
   }
 
   startRender() {
-    const callRender = () => {
+    const callRender = (time: number) => {
       if (!this.isPause) {
-        if (Date.now() - this.lastFrame >= 15) {
+        if (time - this.renderer.getLastFrameTime() >= 16 || time === 0) {
           this.renderer.setPixels(
             this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
           );
 
-          this.renderer.render();
-          this.lastFrame = Date.now();
+          this.renderer.render(time);
         }
       }
 
       window.requestAnimationFrame(callRender);
     };
 
-    callRender();
+    callRender(0);
   }
 }

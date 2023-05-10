@@ -55,7 +55,10 @@ export class Renderer {
 
   getPixelSize = () => this.pixelSize;
 
-  render() {
+  getLastFrameTime = () => this.lastFrameTime;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  render(time: number) {
     const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
 
     for (let row = 0; row < this.height / this.pixelSize; row++) {
@@ -80,17 +83,16 @@ export class Renderer {
       }
     }
 
-    // this.realPixels[toLinearArrayIndex(0, 0, this.width, this.height)] = 0xffff0000;
-
     this.ctx.putImageData(this.imageData, 0, 0);
 
-    this.ctx.font = '10px serif';
-    if (1000 / (new Date().getTime() - this.lastFrameTime) === Infinity) {
-      this.lastFrameTime = new Date().getTime();
+    if (1000 / (performance.now() - this.lastFrameTime) === Infinity) {
+      this.lastFrameTime = performance.now();
     }
-    this.ctx.fillText(`FPS: ${String(1000 / (new Date().getTime() - this.lastFrameTime))}`, 0, 10);
+
+    this.ctx.font = '10px serif';
     this.ctx.fillStyle = 'red';
-    this.lastFrameTime = new Date().getTime();
+    this.ctx.fillText(`FPS: ${String(1000 / (performance.now() - this.lastFrameTime))}`, 0, 10);
+    this.lastFrameTime = performance.now();
   }
 
   getPixels() {
