@@ -9,5 +9,6 @@ export default interface UnitType {
   unitDefaultColor: UnitDefaultColor;
   unitIsLiquid: boolean;
   unitIsStatic: boolean;
+  unitDensity: number;
   unitTransformations?: Transformations;
 }

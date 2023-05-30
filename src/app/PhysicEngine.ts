@@ -68,7 +68,7 @@ export default class PhysicEngine {
       }
     };
 
-    const processSand = (x: number, y: number) => {
+    const processPowder = (x: number, y: number) => {
       if (y <= 0) {
         return;
       }
@@ -134,37 +134,59 @@ export default class PhysicEngine {
 
     const processWater = (x: number, y: number) => {
       const isLeftFree = x > 0 && !currentWorld[x - 1][y];
+      const isLeftLessDense = x > 0 && !isLeftFree
+        && currentWorld[x - 1][y]?.getUnitType().unitIsLiquid
+        && currentWorld[x - 1][y]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
       const isRightFree = x < worldSideSize - 1 && !currentWorld[x + 1][y];
+      const isRightLessDense = x < worldSideSize - 1 && !isRightFree
+        && currentWorld[x + 1][y]?.getUnitType().unitIsLiquid
+        && currentWorld[x + 1][y]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
 
       if (y > 0) {
         const isUnderEmpty = !currentWorld[x][y - 1];
+        const isUnderLessDense = !isUnderEmpty
+          && currentWorld[x][y - 1]?.getUnitType().unitIsLiquid
+          && currentWorld[x][y - 1]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
         const isUnderLeftDiagonalFree = x > 0 && !currentWorld[x - 1][y - 1];
+        const isUnderLeftDiagonalLessDense = x > 0
+          && !isUnderLeftDiagonalFree
+          && currentWorld[x - 1][y - 1]!.getUnitType().unitIsLiquid
+          && currentWorld[x - 1][y - 1]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
         const isUnderRightDiagonalFree = x < worldSideSize - 1 && !currentWorld[x + 1][y - 1];
+        const isUnderRightDiagonalLessDense = x < worldSideSize - 1
+          && !isUnderRightDiagonalFree
+          && currentWorld[x + 1][y - 1]!.getUnitType().unitIsLiquid
+          && currentWorld[x + 1][y - 1]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
         const isUnderDiagonalFree = isUnderLeftDiagonalFree && isUnderRightDiagonalFree;
+        const isUnderDiagonalLessDense = isUnderLeftDiagonalLessDense && isUnderRightDiagonalLessDense;
         const isLeftAndRightFree = isLeftFree && isRightFree;
+        const isLeftAndRightLessDense = isLeftLessDense && isRightLessDense;
 
-        if (isUnderEmpty) {
+        if (isUnderEmpty || isUnderLessDense) {
           replaceUnit(x, y, x, y - 1);
-        } else if (isUnderDiagonalFree && isLeftAndRightFree) {
+        } else if (
+          (isUnderDiagonalFree || isUnderDiagonalLessDense)
+          && (isLeftAndRightFree || isLeftAndRightLessDense)
+        ) {
           const dir = getRandomInt(0, 1);
           if (dir === 0) {
             replaceUnit(x, y, x - 1, y - 1);
           } else {
             replaceUnit(x, y, x + 1, y - 1);
           }
-        } else if (isUnderLeftDiagonalFree && isLeftFree) {
+        } else if ((isUnderLeftDiagonalFree || isUnderLeftDiagonalLessDense) && (isLeftFree || isLeftLessDense)) {
           replaceUnit(x, y, x - 1, y - 1);
-        } else if (isUnderRightDiagonalFree && isRightFree) {
+        } else if ((isUnderRightDiagonalFree || isUnderRightDiagonalLessDense) && (isRightFree || isRightLessDense)) {
           replaceUnit(x, y, x + 1, y - 1);
-        } else if (isLeftFree) {
+        } else if (isLeftFree || isLeftLessDense) {
           replaceUnit(x, y, x - 1, y);
-        } else if (isRightFree) {
+        } else if (isRightFree || isRightLessDense) {
           replaceUnit(x, y, x + 1, y);
         }
       } else if (y === 0) {
-        if (isLeftFree) {
+        if (isLeftFree || isLeftLessDense) {
           replaceUnit(x, y, x - 1, y);
-        } else if (isRightFree) {
+        } else if (isRightFree || isRightLessDense) {
           replaceUnit(x, y, x + 1, y);
         }
       }
@@ -177,7 +199,7 @@ export default class PhysicEngine {
         } else if (currentWorld[x][y]?.getUnitType().unitIsLiquid) {
           processWater(x, y);
         } else {
-          processSand(x, y);
+          processPowder(x, y);
         }
       }
     };

@@ -31,6 +31,8 @@ export class App {
 
   private isPause = false;
 
+  private gameMaxCountMaterials = 5;
+
   constructor() {
     document.body.appendChild(this.canvas);
 
@@ -145,7 +147,7 @@ export class App {
       'mousedown',
       (e) => {
         if (e.button === 1) {
-          if (this.matterType < 4) {
+          if (this.matterType < this.gameMaxCountMaterials) {
             this.matterType += 1;
           } else {
             this.matterType = 0;

@@ -108,8 +108,11 @@ export default class Engine {
           unitTypeName = 'flammable-gas';
           break;
         }
-
         case 4: {
+          unitTypeName = 'red-blood';
+          break;
+        }
+        case 5: {
           return null;
         }
 
