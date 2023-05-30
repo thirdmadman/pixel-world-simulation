@@ -74,36 +74,36 @@ export default class PhysicEngine {
       }
 
       const isUnderEmptyOrLiquids = !currentWorld[x][y - 1]
-        || currentWorld[x][y - 1]?.unitType.unitIsLiquid
-        || currentWorld[x][y - 1]?.unitType.unitIsGas;
+        || currentWorld[x][y - 1]?.getUnitType().unitIsLiquid
+        || currentWorld[x][y - 1]?.getUnitType().unitIsGas;
 
       const isUnderLeftDiagonalFreeOrLiquidsOrGas = x > 0
         && (!currentWorld[x - 1][y - 1]
-          || currentWorld[x - 1][y - 1]?.unitType.unitIsLiquid
-          || currentWorld[x - 1][y - 1]?.unitType.unitIsGas);
+          || currentWorld[x - 1][y - 1]?.getUnitType().unitIsLiquid
+          || currentWorld[x - 1][y - 1]?.getUnitType().unitIsGas);
 
       const isUnderRightDiagonalFreeOrLiquidsOrGas = x < worldSideSize - 1
         && (!currentWorld[x + 1][y - 1]
-          || currentWorld[x + 1][y - 1]?.unitType.unitIsLiquid
-          || currentWorld[x + 1][y - 1]?.unitType.unitIsGas);
+          || currentWorld[x + 1][y - 1]?.getUnitType().unitIsLiquid
+          || currentWorld[x + 1][y - 1]?.getUnitType().unitIsGas);
 
       const isUnderDiagonalFreeOrLiquidsOrGas = isUnderLeftDiagonalFreeOrLiquidsOrGas
       && isUnderRightDiagonalFreeOrLiquidsOrGas;
 
       const isLeftFreeOrLiquidOrGas = x > 0
         && (!currentWorld[x - 1][y]
-          || currentWorld[x - 1][y]?.unitType.unitIsLiquid
-          || currentWorld[x - 1][y]?.unitType.unitIsGas);
+          || currentWorld[x - 1][y]?.getUnitType().unitIsLiquid
+          || currentWorld[x - 1][y]?.getUnitType().unitIsGas);
 
       const isRightFreeOrLiquidOrGas = x < worldSideSize - 1
         && (!currentWorld[x + 1][y]
-          || currentWorld[x + 1][y]?.unitType.unitIsLiquid
-          || currentWorld[x + 1][y]?.unitType.unitIsGas);
+          || currentWorld[x + 1][y]?.getUnitType().unitIsLiquid
+          || currentWorld[x + 1][y]?.getUnitType().unitIsGas);
 
       const isLeftAndRightFreeOrLiquidsOrGas = isLeftFreeOrLiquidOrGas && isRightFreeOrLiquidOrGas;
 
       if (isUnderEmptyOrLiquids) {
-        if (currentWorld[x][y - 1]?.unitType.unitIsLiquid) {
+        if (currentWorld[x][y - 1]?.getUnitType().unitIsLiquid) {
           if (y < worldSideSize - 1) {
             if (!currentWorld[x][y + 1]) {
               replaceUnit(x, y, x, y - 1);
@@ -172,9 +172,9 @@ export default class PhysicEngine {
 
     const processUnit = (x: number, y: number) => {
       if (!currentWorld[x][y]?.isUpdated) {
-        if (currentWorld[x][y]?.unitType.unitIsGas) {
+        if (currentWorld[x][y]?.getUnitType().unitIsGas) {
           processGas(x, y);
-        } else if (currentWorld[x][y]?.unitType.unitIsLiquid) {
+        } else if (currentWorld[x][y]?.getUnitType().unitIsLiquid) {
           processWater(x, y);
         } else {
           processSand(x, y);
@@ -184,7 +184,7 @@ export default class PhysicEngine {
 
     const processUnits = (x: number, y: number) => {
       if (currentWorld[x][y] != null) {
-        if (!currentWorld[x][y]?.unitType.unitIsStatic) {
+        if (!currentWorld[x][y]?.getUnitType().unitIsStatic) {
           processUnit(x, y);
         }
       }
@@ -192,16 +192,13 @@ export default class PhysicEngine {
 
     for (let y = 0; y < worldSideSize; y += 1) {
       for (let x = 0; x < worldSideSize; x += 1) {
-        // const stateUnitIndex = toLinearArrayIndex(x, y, worldSideSize, worldSideSize);
         if (currentWorld[x][y] != null) {
-          if (!currentWorld[x][y]?.unitType.unitIsStatic) {
+          if (!currentWorld[x][y]?.getUnitType().unitIsStatic) {
             currentWorld[x][y]!.isUpdated = false;
           }
         }
       }
     }
-
-    // let isReverseDirection = false;
 
     for (let y = 0; y < worldSideSize; y += 1) {
       const dir = Boolean(getRandomInt(0, 1));
@@ -215,7 +212,6 @@ export default class PhysicEngine {
           processUnits(x, y);
         }
       }
-      // isReverseDirection = !isReverseDirection;
     }
 
     // for (let y = 0; y < worldSideSize; y += 1) {

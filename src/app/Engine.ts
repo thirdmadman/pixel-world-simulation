@@ -2,7 +2,6 @@
 import PhysicEngine from './PhysicEngine';
 import Point from './Point';
 import Unit from './Unit';
-import getRandomInt from './utils';
 // import getRandomInt from './utils';
 
 export default class Engine {
@@ -77,7 +76,7 @@ export default class Engine {
     for (let y = framePositionY; y < framePositionY + frameHeight; y += 1) {
       for (let x = framePositionX; x < framePositionX + frameWidth; x += 1) {
         if (this.gameWorldState[x][y] !== null) {
-          frame[frameIndex] = this.gameWorldState[x][y]?.unitType.unitColor || 0x00000000;
+          frame[frameIndex] = this.gameWorldState[x][y]?.unitState.unitColor || 0x00000000;
         }
 
         frameIndex += 1;
@@ -90,36 +89,23 @@ export default class Engine {
 
   createUnitAtPoint(mousePosition: Point, unitType: number, squareSize: number) {
     const generateNewUnit = () => {
-      let unitIsLiquid = false;
-      let unitColor = 0;
-      let unitIsStatic = false;
-      let unitIsGas = false;
-
+      let unitTypeName = 'pure-water';
       switch (unitType) {
         case 0: {
-          unitIsLiquid = true;
-          unitColor += 0xffd900 + 0x77000000;
+          unitTypeName = 'pure-water';
           break;
         }
         case 1: {
-          const randColor = getRandomInt(0x0a, 0x35);
-          const resColor = randColor + randColor * 16 ** 2;
-          unitColor += 0x00caca + 0xff000000 + resColor;
+          unitTypeName = 'yellow-sand';
           break;
         }
         case 2: {
-          unitIsStatic = true;
-          const randColor = getRandomInt(0x0a, 0x52);
-          const resColor = randColor + randColor * 16 ** 2 + randColor * 16 ** 4;
-          unitColor += 0x818181 + 0xff000000 + resColor;
+          unitTypeName = 'gray-rock';
           break;
         }
 
         case 3: {
-          unitIsGas = true;
-          const randColor = getRandomInt(0x0a, 0x52);
-          const resColor = randColor + randColor * 16 ** 2 + randColor * 16 ** 4;
-          unitColor += 0x11aa00 + 0x33000000 + resColor;
+          unitTypeName = 'flammable-gas';
           break;
         }
 
@@ -131,18 +117,7 @@ export default class Engine {
           break;
       }
 
-      return new Unit(
-        {
-          unitHealth: 1,
-          unitIsGas,
-          unitIsFlammable: false,
-          unitIsLiquid,
-          unitIsStatic,
-          unitColor,
-        },
-        null,
-        this.lastUnitId++,
-      );
+      return new Unit(unitTypeName, null, this.lastUnitId++);
     };
 
     if (squareSize > 0) {

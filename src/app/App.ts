@@ -5,7 +5,7 @@ import { Renderer } from './Renderer';
 export class App {
   public renderer: Renderer;
 
-  public worldSideSize = 100;
+  public worldSideSize = 1000;
 
   private engine = new Engine(this.worldSideSize);
 
@@ -25,7 +25,7 @@ export class App {
 
   private virtualMousePosition = { x: 0, y: 0 } as Point;
 
-  private matterType = 3;
+  private matterType = 0;
 
   private pointerSquareSize = 0;
 
@@ -187,22 +187,24 @@ export class App {
 
   setScreenSize(width: number, height: number) {
     this.renderer.setScreenSize(width, height);
-    this.engine.setRendererSize(
-      Math.floor(width / this.renderer.getPixelSize()),
-      Math.floor(height / this.renderer.getPixelSize()),
-    );
-    this.frameWidth = Math.floor(width / this.renderer.getPixelSize());
-    this.frameHeight = Math.floor(height / this.renderer.getPixelSize());
+
+    const newWidth = Math.floor(width / this.renderer.getPixelSize());
+    const newHeight = Math.floor(height / this.renderer.getPixelSize());
+
+    this.engine.setRendererSize(newWidth, newHeight);
+    this.frameWidth = Math.floor(newWidth);
+    this.frameHeight = Math.floor(newHeight);
   }
 
   setPixelSize(size: number) {
     this.renderer.setPixelSize(size);
-    this.engine.setRendererSize(
-      Math.floor(this.renderer.getScreenSizeX() / this.renderer.getPixelSize()),
-      Math.floor(this.renderer.getScreenSizeY() / this.renderer.getPixelSize()),
-    );
-    this.frameWidth = Math.floor(this.renderer.getScreenSizeX() / this.renderer.getPixelSize());
-    this.frameHeight = Math.floor(this.renderer.getScreenSizeY() / this.renderer.getPixelSize());
+
+    const width = Math.floor(this.renderer.getScreenSizeX() / this.renderer.getPixelSize());
+    const height = Math.floor(this.renderer.getScreenSizeY() / this.renderer.getPixelSize());
+    console.error(width, height);
+    this.engine.setRendererSize(width, height);
+    this.frameWidth = width;
+    this.frameHeight = height;
   }
 
   start() {
@@ -218,13 +220,11 @@ export class App {
   startRender() {
     const callRender = (time: number) => {
       if (!this.isPause) {
-        if (time - this.renderer.getLastFrameTime() >= 16 || time === 0) {
-          this.renderer.setPixels(
-            this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
-          );
+        this.renderer.setPixels(
+          this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
+        );
 
-          this.renderer.render(time);
-        }
+        this.renderer.render(time);
       }
 
       window.requestAnimationFrame(callRender);

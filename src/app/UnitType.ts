@@ -1,8 +1,13 @@
+import { UnitDefaultColor } from './UnitDefaultColor';
+import { Transformations } from './Transformations';
+
 export default interface UnitType {
-  unitHealth: number;
+  unitName: string;
+  unitDefaultHealth: number;
   unitIsGas: boolean;
   unitIsFlammable: boolean;
+  unitDefaultColor: UnitDefaultColor;
   unitIsLiquid: boolean;
   unitIsStatic: boolean;
-  unitColor: number;
+  unitTransformations?: Transformations;
 }

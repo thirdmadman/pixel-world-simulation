@@ -5,6 +5,10 @@ export class Renderer {
 
   private height: number;
 
+  private desiredWidth: number;
+
+  private desiredHeight: number;
+
   private ctx: CanvasRenderingContext2D;
 
   private imageData: ImageData;
@@ -23,6 +27,8 @@ export class Renderer {
     this.canvas = parentCanvas;
     this.width = this.canvas.width;
     this.height = this.canvas.height;
+    this.desiredWidth = this.canvas.width;
+    this.desiredHeight = this.canvas.height;
     this.ctx = this.canvas.getContext('2d') || new CanvasRenderingContext2D();
 
     this.imageData = this.ctx.createImageData(this.width, this.height);
@@ -31,11 +37,14 @@ export class Renderer {
   }
 
   setScreenSize(width: number, height: number) {
-    this.canvas.width = width;
-    this.canvas.height = height;
+    this.desiredWidth = width;
+    this.desiredHeight = height;
 
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
+    this.width = Math.floor(width / this.pixelSize) * this.pixelSize;
+    this.height = Math.floor(height / this.pixelSize) * this.pixelSize;
+
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
 
     this.imageData = this.ctx.createImageData(this.width, this.height);
     this.realPixels = new Uint32Array(this.imageData.data.buffer);
@@ -48,7 +57,7 @@ export class Renderer {
 
   setPixelSize(size: number) {
     this.pixelSize = size;
-    this.setScreenSize(this.width, this.height);
+    this.setScreenSize(this.desiredWidth, this.desiredHeight);
   }
 
   getPixelsCount = () => (this.width * this.height) / this.pixelSize ** 2;
