@@ -35,7 +35,7 @@ export default class Engine {
   // 02 this is health of the unit
   //
 
-  gameWorldState = Array.from(Array(4), () => new Array<Unit | null>(4));
+  gameWorldState: Array<Array<Unit | null>> = Array.from(Array(4), () => new Array<Unit | null>(4));
 
   constructor(worldSquareSide: number) {
     // this.gameWorld = new Uint32Array(worldSize);
@@ -149,5 +149,20 @@ export default class Engine {
   requestFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
     this.gameWorldState = this.physicEngine.resolveWorld(this.gameWorldState, this.worldSquareSide);
     return this.extractFrame(frameWidth, frameHeight, framePositionX, framePositionY);
+  }
+
+  serializeWorld() {
+    const worldObj = {} as { [key: number]: { [key: number]: Unit } };
+    for (let x = 0; x < this.worldSquareSide; x += 1) {
+      for (let y = 0; y < this.worldSquareSide; y += 1) {
+        if (this.gameWorldState[x][y] != null) {
+          if (!worldObj[x]) {
+            worldObj[x] = {};
+          }
+          worldObj[x][y] = this.gameWorldState[x][y] as Unit;
+        }
+      }
+    }
+    return JSON.stringify(worldObj);
   }
 }
