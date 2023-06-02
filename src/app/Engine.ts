@@ -4,6 +4,20 @@ import Point from './Point';
 import Unit from './Unit';
 // import getRandomInt from './utils';
 
+interface IWorldStateSave {
+  [key: number]: { [key: number]: Unit };
+}
+
+interface ISaveFile {
+  frameWidth: number;
+  frameHeight: number;
+  framePositionX: number;
+  framePositionY: number;
+  worldSideSize: number;
+  lastUnitId: number;
+  worldSate: IWorldStateSave;
+}
+
 export default class Engine {
   frameWidth = 0;
 
@@ -20,6 +34,8 @@ export default class Engine {
   mousePosition = { x: 0, y: 0 } as Point;
 
   lastUnitId = 0;
+
+  save = '';
 
   // gameWorld = new Uint32Array(4);
 
@@ -151,8 +167,8 @@ export default class Engine {
     return this.extractFrame(frameWidth, frameHeight, framePositionX, framePositionY);
   }
 
-  serializeWorld() {
-    const worldObj = {} as { [key: number]: { [key: number]: Unit } };
+  convertWorldStateToSave() {
+    const worldObj = {} as IWorldStateSave;
     for (let x = 0; x < this.worldSquareSide; x += 1) {
       for (let y = 0; y < this.worldSquareSide; y += 1) {
         if (this.gameWorldState[x][y] != null) {
@@ -163,6 +179,50 @@ export default class Engine {
         }
       }
     }
-    return JSON.stringify(worldObj);
+    return worldObj;
+  }
+
+  serializeToSaveFile() {
+    const saveObject = {
+      frameWidth: this.frameWidth,
+      frameHeight: this.frameHeight,
+      framePositionX: this.framePositionX,
+      framePositionY: this.framePositionY,
+      worldSideSize: this.worldSquareSide,
+      lastUnitId: this.lastUnitId,
+      worldSate: this.convertWorldStateToSave(),
+    };
+    console.error(saveObject);
+    this.save = JSON.stringify(saveObject);
+    return JSON.stringify(saveObject);
+  }
+
+  convertSaveToWorldState(save: IWorldStateSave, worldSquareSide: number) {
+    const newWorldState = Array.from(Array(worldSquareSide), () => new Array<Unit>(worldSquareSide));
+    Object.keys(save).forEach((keyX) => {
+      if (save[parseInt(keyX, 10)]) {
+        Object.keys(save[parseInt(keyX, 10)]).forEach((keyY) => {
+          if (save[parseInt(keyX, 10)][parseInt(keyY, 10)]) {
+            const u = save[parseInt(keyX, 10)][parseInt(keyY, 10)];
+            const unit = new Unit(u.unitTypeName, null, u.unitId, u.unitState);
+            newWorldState[parseInt(keyX, 10)][parseInt(keyY, 10)] = unit;
+          }
+        });
+      }
+    });
+    return newWorldState;
+  }
+
+  deserializeFromFile(file: string = this.save) {
+    const saveObject = JSON.parse(file) as ISaveFile;
+    if (saveObject && saveObject.worldSate) {
+      this.frameWidth = saveObject.frameWidth;
+      this.frameHeight = saveObject.frameHeight;
+      this.framePositionX = saveObject.framePositionX;
+      this.framePositionY = saveObject.framePositionY;
+      this.worldSquareSide = saveObject.worldSideSize;
+      this.lastUnitId = saveObject.lastUnitId;
+      this.gameWorldState = this.convertSaveToWorldState(saveObject.worldSate, saveObject.worldSideSize);
+    }
   }
 }
