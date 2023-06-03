@@ -37,6 +37,8 @@ export default class Engine {
 
   save = '';
 
+  isPhysicsEnginePause = false;
+
   // gameWorld = new Uint32Array(4);
 
   // 0x 01  02  33  44
@@ -75,6 +77,10 @@ export default class Engine {
     //   unitIsStatic: true,
     //   unitColor: 0xff000000,
     // }, []));
+  }
+
+  setPause(isPause: boolean) {
+    this.isPhysicsEnginePause = isPause;
   }
 
   setMousedPosition(point: Point) {
@@ -169,7 +175,9 @@ export default class Engine {
   }
 
   requestFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
-    this.gameWorldState = this.physicEngine.resolveWorld(this.gameWorldState, this.worldSquareSide);
+    if (!this.isPhysicsEnginePause) {
+      this.gameWorldState = this.physicEngine.resolveWorld(this.gameWorldState, this.worldSquareSide);
+    }
     return this.extractFrame(frameWidth, frameHeight, framePositionX, framePositionY);
   }
 

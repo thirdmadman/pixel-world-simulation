@@ -157,8 +157,6 @@ export class App {
       false,
     );
 
-    this.renderer = new Renderer(this.canvas);
-
     document.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowRight') {
         if (this.framePositionX < this.worldSideSize - this.frameWidth) {
@@ -183,8 +181,17 @@ export class App {
       }
       if (event.key === ' ') {
         this.isPause = !this.isPause;
+        this.engine.setPause(this.isPause);
+      }
+      if (event.key === 's') {
+        this.engine.saveToLocalStorage();
+      }
+      if (event.key === 'l') {
+        this.engine.loadFromLocalStorage();
       }
     });
+
+    this.renderer = new Renderer(this.canvas);
   }
 
   setScreenSize(width: number, height: number) {
@@ -221,13 +228,11 @@ export class App {
 
   startRender() {
     const callRender = (time: number) => {
-      if (!this.isPause) {
-        this.renderer.setPixels(
-          this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
-        );
+      this.renderer.setPixels(
+        this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
+      );
 
-        this.renderer.render(time);
-      }
+      this.renderer.render(time);
 
       window.requestAnimationFrame(callRender);
     };
