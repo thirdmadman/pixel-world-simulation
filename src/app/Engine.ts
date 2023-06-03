@@ -136,7 +136,7 @@ export default class Engine {
           break;
       }
 
-      return new Unit(unitTypeName, null, this.lastUnitId++);
+      return new Unit(unitTypeName, null, 0);
     };
 
     if (squareSize > 0) {
@@ -149,6 +149,9 @@ export default class Engine {
           if (squareStartX + x < this.worldSquareSide && squareStartY + y < this.worldSquareSide) {
             if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
               this.gameWorldState[squareStartX + x][squareStartY + y] = generatedUnit;
+              if (generatedUnit !== null) {
+                generatedUnit.unitId = this.lastUnitId++;
+              }
             }
           }
         }
@@ -159,6 +162,9 @@ export default class Engine {
     const generatedUnit = generateNewUnit();
     if (!this.gameWorldState[mousePosition.x][mousePosition.y] || generatedUnit === null) {
       this.gameWorldState[mousePosition.x][mousePosition.y] = generatedUnit;
+      if (generatedUnit !== null) {
+        generatedUnit.unitId = this.lastUnitId++;
+      }
     }
   }
 
@@ -213,16 +219,32 @@ export default class Engine {
     return newWorldState;
   }
 
-  deserializeFromFile(file: string = this.save) {
+  deserializeAnLoadFromFile(file: string = this.save) {
     const saveObject = JSON.parse(file) as ISaveFile;
-    if (saveObject && saveObject.worldSate) {
-      this.frameWidth = saveObject.frameWidth;
-      this.frameHeight = saveObject.frameHeight;
-      this.framePositionX = saveObject.framePositionX;
-      this.framePositionY = saveObject.framePositionY;
-      this.worldSquareSide = saveObject.worldSideSize;
-      this.lastUnitId = saveObject.lastUnitId;
-      this.gameWorldState = this.convertSaveToWorldState(saveObject.worldSate, saveObject.worldSideSize);
+    if (file && file[0] === '{') {
+      const saveObjectKeysNumber = Object.keys(saveObject).length;
+      if (saveObject && saveObjectKeysNumber > 0) {
+        if (saveObject.worldSate) {
+          this.frameWidth = saveObject.frameWidth;
+          this.frameHeight = saveObject.frameHeight;
+          this.framePositionX = saveObject.framePositionX;
+          this.framePositionY = saveObject.framePositionY;
+          this.worldSquareSide = saveObject.worldSideSize;
+          this.lastUnitId = saveObject.lastUnitId;
+          this.gameWorldState = this.convertSaveToWorldState(saveObject.worldSate, saveObject.worldSideSize);
+        }
+      }
+    }
+  }
+
+  saveToLocalStorage() {
+    localStorage.setItem('pws-save', this.serializeToSaveFile());
+  }
+
+  loadFromLocalStorage() {
+    const src = localStorage.getItem('pws-save');
+    if (src) {
+      this.deserializeAnLoadFromFile(src);
     }
   }
 }
