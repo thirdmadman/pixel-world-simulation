@@ -4,6 +4,10 @@ import getRandomInt from './utils';
 
 /* eslint-disable class-methods-use-this */
 export default class PhysicEngine {
+  lastY = 0;
+
+  isLineByLineResolve = false;
+
   resolveWorld(currentWorld: Array<Array<Unit | null>>, worldSideSize: number) {
     // const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
 
@@ -25,9 +29,71 @@ export default class PhysicEngine {
 
     const replaceUnit = (xSrc: number, ySrc: number, xDist: number, yDist: number, isUpdated = true) => {
       const tmp = currentWorld[xDist][yDist];
+      console.error('Replacing', tmp);
       currentWorld[xDist][yDist] = currentWorld[xSrc][ySrc];
-      currentWorld[xDist][yDist]!.isUpdated = isUpdated;
+      if (currentWorld[xDist][yDist]) {
+        currentWorld[xDist][yDist]!.isUpdated = isUpdated;
+      }
       currentWorld[xSrc][ySrc] = tmp;
+      if (currentWorld[xSrc][ySrc]) {
+        currentWorld[xSrc][ySrc]!.isUpdated = isUpdated;
+      }
+    };
+
+    const displaceLiquidOrGasUnit = (x: number, y: number, isLiquid: boolean) => {
+      const displaceLine = (yAdd: number) => {
+        console.error('gg');
+        if (!currentWorld[x][y + yAdd]) {
+          replaceUnit(x, y, x, y + yAdd);
+          return true;
+        }
+        if (x > 0 && !currentWorld[x - 1][y + yAdd]) {
+          replaceUnit(x, y, x - 1, y + yAdd);
+          return true;
+        }
+        if (x < worldSideSize - 1 && !currentWorld[x + 1][y + yAdd]) {
+          replaceUnit(x, y, x + 1, y + yAdd);
+          return true;
+        }
+        return false;
+      };
+
+      const dir = isLiquid ? -1 : 1;
+
+      if (y > 0) {
+        if (displaceLine(1 * dir)) {
+          return true;
+        }
+      } else if (x > 0 && !currentWorld[x - 1][y]) {
+        replaceUnit(x, y, x - 1, y);
+        return true;
+      } else if (x < worldSideSize - 1 && !currentWorld[x + 1][y]) {
+        replaceUnit(x, y, x + 1, y);
+        return true;
+      } else if (y < worldSideSize - 1) {
+        if (displaceLine(-1 * dir)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const displaceOrReplaceUnit = (xSrc: number, ySrc: number, xDist: number, yDist: number, isUpdated = true) => {
+      if (!currentWorld[xDist][yDist]) {
+        replaceUnit(xSrc, ySrc, xDist, yDist, isUpdated);
+        console.error('Replace');
+        return;
+      }
+
+      const isLiquid = currentWorld[xDist][yDist]!.getUnitType().unitIsLiquid;
+
+      const isDisplaced = displaceLiquidOrGasUnit(xDist, yDist, isLiquid);
+      if (isDisplaced) {
+        console.error('Displaced');
+        return;
+      }
+
+      replaceUnit(xSrc, ySrc, xDist, yDist, isUpdated);
     };
 
     const processGas = (x: number, y: number) => {
@@ -73,47 +139,75 @@ export default class PhysicEngine {
         return;
       }
 
-      const isUnderEmptyOrLiquids = !currentWorld[x][y - 1]
-        || currentWorld[x][y - 1]?.getUnitType().unitIsLiquid
-        || currentWorld[x][y - 1]?.getUnitType().unitIsGas;
+      let isLeftFree = false;
+      let isLeftLiquid = false;
+      let isLeftGas = false;
 
-      const isUnderLeftDiagonalFreeOrLiquidsOrGas = x > 0
-        && (!currentWorld[x - 1][y - 1]
-          || currentWorld[x - 1][y - 1]?.getUnitType().unitIsLiquid
-          || currentWorld[x - 1][y - 1]?.getUnitType().unitIsGas);
+      let isRightFree = false;
+      let isRightLiquid = false;
+      let isRightGas = false;
 
-      const isUnderRightDiagonalFreeOrLiquidsOrGas = x < worldSideSize - 1
-        && (!currentWorld[x + 1][y - 1]
-          || currentWorld[x + 1][y - 1]?.getUnitType().unitIsLiquid
-          || currentWorld[x + 1][y - 1]?.getUnitType().unitIsGas);
+      let isUnderLeftDiagonalFree = false;
+      let isUnderLeftDiagonalLiquid = false;
+      let isUnderLeftDiagonalGas = false;
+
+      let isUnderRightDiagonalFree = false;
+      let isUnderRightDiagonalLiquid = false;
+      let isUnderRightDiagonalGas = false;
+
+      if (x > 0) {
+        isLeftFree = !currentWorld[x - 1][y];
+        if (!isLeftFree) {
+          isLeftLiquid = !!currentWorld[x - 1][y]?.getUnitType().unitIsLiquid;
+          isLeftGas = !!currentWorld[x - 1][y]?.getUnitType().unitIsGas;
+        }
+
+        isUnderLeftDiagonalFree = !currentWorld[x - 1][y - 1];
+        if (!isUnderLeftDiagonalFree) {
+          isUnderLeftDiagonalLiquid = !!currentWorld[x - 1][y - 1]?.getUnitType().unitIsLiquid;
+          isUnderLeftDiagonalGas = !!currentWorld[x - 1][y - 1]?.getUnitType().unitIsGas;
+        }
+      }
+
+      if (x < worldSideSize - 1) {
+        isRightFree = !currentWorld[x + 1][y];
+        if (!isRightFree) {
+          isRightLiquid = !!currentWorld[x + 1][y]?.getUnitType().unitIsLiquid;
+          isRightGas = !!currentWorld[x + 1][y]?.getUnitType().unitIsGas;
+        }
+
+        isUnderRightDiagonalFree = !currentWorld[x + 1][y - 1];
+        if (!isUnderRightDiagonalFree) {
+          isUnderRightDiagonalLiquid = !!currentWorld[x + 1][y - 1]?.getUnitType().unitIsLiquid;
+          isUnderRightDiagonalGas = !!currentWorld[x + 1][y - 1]?.getUnitType().unitIsGas;
+        }
+      }
+
+      const isUnderLiquidsOrGas = currentWorld[x][y - 1]
+      && (currentWorld[x][y - 1]?.getUnitType().unitIsLiquid
+      || currentWorld[x][y - 1]?.getUnitType().unitIsGas);
+
+      const isUnderEmptyOrLiquidsOrGas = !currentWorld[x][y - 1] || isUnderLiquidsOrGas;
+
+      const isLeftFreeOrLiquidOrGas = isLeftFree || isLeftLiquid || isLeftGas;
+
+      const isRightFreeOrLiquidOrGas = isRightFree || isRightLiquid || isRightGas;
+
+      const isUnderLeftDiagonalFreeOrLiquidsOrGas = isUnderLeftDiagonalFree
+      || isUnderLeftDiagonalLiquid || isUnderLeftDiagonalGas;
+
+      const isUnderRightDiagonalFreeOrLiquidsOrGas = isUnderRightDiagonalFree
+      || isUnderRightDiagonalLiquid || isUnderRightDiagonalGas;
 
       const isUnderDiagonalFreeOrLiquidsOrGas = isUnderLeftDiagonalFreeOrLiquidsOrGas
       && isUnderRightDiagonalFreeOrLiquidsOrGas;
 
-      const isLeftFreeOrLiquidOrGas = x > 0
-        && (!currentWorld[x - 1][y]
-          || currentWorld[x - 1][y]?.getUnitType().unitIsLiquid
-          || currentWorld[x - 1][y]?.getUnitType().unitIsGas);
-
-      const isRightFreeOrLiquidOrGas = x < worldSideSize - 1
-        && (!currentWorld[x + 1][y]
-          || currentWorld[x + 1][y]?.getUnitType().unitIsLiquid
-          || currentWorld[x + 1][y]?.getUnitType().unitIsGas);
-
       const isLeftAndRightFreeOrLiquidsOrGas = isLeftFreeOrLiquidOrGas && isRightFreeOrLiquidOrGas;
 
-      if (isUnderEmptyOrLiquids) {
-        if (currentWorld[x][y - 1]?.getUnitType().unitIsLiquid) {
+      if (isUnderEmptyOrLiquidsOrGas) {
+        if (isUnderLiquidsOrGas) {
           if (y < worldSideSize - 1) {
-            if (!currentWorld[x][y + 1]) {
-              replaceUnit(x, y, x, y - 1);
-            } else if (x > 0 && !currentWorld[x - 1][y]) {
-              replaceUnit(x, y, x - 1, y);
-            } else if (x < worldSideSize - 1 && !currentWorld[x + 1][y]) {
-              replaceUnit(x, y, x + 1, y);
-            } else {
-              replaceUnit(x, y, x, y - 1);
-            }
+            displaceOrReplaceUnit(x, y, x, y - 1);
           }
         } else if (!currentWorld[x][y - 1]) {
           replaceUnit(x, y, x, y - 1);
@@ -121,52 +215,79 @@ export default class PhysicEngine {
       } else if (isUnderDiagonalFreeOrLiquidsOrGas && isLeftAndRightFreeOrLiquidsOrGas) {
         const dir = getRandomInt(0, 1);
         if (dir === 0) {
-          replaceUnit(x, y, x - 1, y - 1);
+          displaceOrReplaceUnit(x, y, x - 1, y - 1);
         } else {
-          replaceUnit(x, y, x + 1, y - 1);
+          displaceOrReplaceUnit(x, y, x + 1, y - 1);
         }
       } else if (isUnderLeftDiagonalFreeOrLiquidsOrGas && isLeftFreeOrLiquidOrGas) {
-        replaceUnit(x, y, x - 1, y - 1);
+        displaceOrReplaceUnit(x, y, x - 1, y - 1);
       } else if (isUnderRightDiagonalFreeOrLiquidsOrGas && isRightFreeOrLiquidOrGas) {
-        replaceUnit(x, y, x + 1, y - 1);
+        displaceOrReplaceUnit(x, y, x + 1, y - 1);
       }
     };
 
     const processWater = (x: number, y: number) => {
       const isLeftFree = x > 0 && !currentWorld[x - 1][y];
+      const isLeftUpdated = x > 0 && !isLeftFree && !isLeftFree && currentWorld[x - 1][y]?.isUpdated;
       const isLeftLessDense = x > 0 && !isLeftFree
         && currentWorld[x - 1][y]?.getUnitType().unitIsLiquid
         && currentWorld[x - 1][y]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
+      const isLeftGas = x > 0 && !isLeftFree && currentWorld[x - 1][y]?.getUnitType().unitIsGas;
+
       const isRightFree = x < worldSideSize - 1 && !currentWorld[x + 1][y];
+      const isRightUpdated = x < worldSideSize - 1 && !isRightFree && currentWorld[x + 1][y]?.isUpdated;
       const isRightLessDense = x < worldSideSize - 1 && !isRightFree
         && currentWorld[x + 1][y]?.getUnitType().unitIsLiquid
         && currentWorld[x + 1][y]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
+      const isRightGas = x < worldSideSize - 1 && !isRightFree && currentWorld[x + 1][y]?.getUnitType().unitIsGas;
 
       if (y > 0) {
         const isUnderEmpty = !currentWorld[x][y - 1];
         const isUnderLessDense = !isUnderEmpty
           && currentWorld[x][y - 1]?.getUnitType().unitIsLiquid
           && currentWorld[x][y - 1]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
+        const isUnderGas = !isUnderEmpty && currentWorld[x][y - 1]?.getUnitType().unitIsGas;
+
         const isUnderLeftDiagonalFree = x > 0 && !currentWorld[x - 1][y - 1];
         const isUnderLeftDiagonalLessDense = x > 0
           && !isUnderLeftDiagonalFree
           && currentWorld[x - 1][y - 1]!.getUnitType().unitIsLiquid
           && currentWorld[x - 1][y - 1]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
+        const isUnderLeftDiagonalGas = x > 0
+          && !isUnderLeftDiagonalFree
+          && currentWorld[x - 1][y - 1]!.getUnitType().unitIsGas;
+        const isUnderLeftDiagonalUpdated = x > 0
+          && !isUnderLeftDiagonalFree
+          && currentWorld[x - 1][y - 1]?.isUpdated;
+
         const isUnderRightDiagonalFree = x < worldSideSize - 1 && !currentWorld[x + 1][y - 1];
         const isUnderRightDiagonalLessDense = x < worldSideSize - 1
           && !isUnderRightDiagonalFree
           && currentWorld[x + 1][y - 1]!.getUnitType().unitIsLiquid
           && currentWorld[x + 1][y - 1]!.getUnitType().unitDensity < currentWorld[x][y]!.getUnitType().unitDensity;
+        const isUnderRightDiagonalGas = x < worldSideSize - 1
+          && !isUnderRightDiagonalFree
+          && currentWorld[x + 1][y - 1]!.getUnitType().unitIsGas;
+        const isUnderRightDiagonalUpdated = x < worldSideSize - 1
+          && !isUnderRightDiagonalFree
+          && currentWorld[x + 1][y - 1]?.isUpdated;
+
         const isUnderDiagonalFree = isUnderLeftDiagonalFree && isUnderRightDiagonalFree;
         const isUnderDiagonalLessDense = isUnderLeftDiagonalLessDense && isUnderRightDiagonalLessDense;
-        const isLeftAndRightFree = isLeftFree && isRightFree;
-        const isLeftAndRightLessDense = isLeftLessDense && isRightLessDense;
+        // const isUnderDiagonalUpdated = isUnderLeftDiagonalUpdated && isUnderRightDiagonalUpdated;
+        const isUnderDiagonalGas = isUnderLeftDiagonalGas && isUnderRightDiagonalGas;
 
-        if (isUnderEmpty || isUnderLessDense) {
+        const isLeftAndRightFree = isLeftFree && isRightFree;
+        const isLeftAndRightUpdated = isLeftUpdated && isRightUpdated;
+        const isLeftAndRightLessDense = isLeftLessDense && isRightLessDense;
+        const isLeftAndRightGas = isLeftGas && isRightGas;
+
+        if (isUnderEmpty || isUnderLessDense || isUnderGas) {
           replaceUnit(x, y, x, y - 1);
         } else if (
-          (isUnderDiagonalFree || isUnderDiagonalLessDense)
-          && (isLeftAndRightFree || isLeftAndRightLessDense)
+          !isLeftAndRightUpdated
+          && (isUnderDiagonalFree || isUnderDiagonalLessDense || isUnderDiagonalGas)
+          && (isLeftAndRightFree || isLeftAndRightLessDense || isLeftAndRightGas)
         ) {
           const dir = getRandomInt(0, 1);
           if (dir === 0) {
@@ -174,19 +295,27 @@ export default class PhysicEngine {
           } else {
             replaceUnit(x, y, x + 1, y - 1);
           }
-        } else if ((isUnderLeftDiagonalFree || isUnderLeftDiagonalLessDense) && (isLeftFree || isLeftLessDense)) {
+        } else if (
+          !isUnderLeftDiagonalUpdated
+          && (isUnderLeftDiagonalFree || isUnderLeftDiagonalLessDense || isUnderLeftDiagonalGas)
+          && (isLeftFree || isLeftLessDense || isLeftGas)
+        ) {
           replaceUnit(x, y, x - 1, y - 1);
-        } else if ((isUnderRightDiagonalFree || isUnderRightDiagonalLessDense) && (isRightFree || isRightLessDense)) {
+        } else if (
+          !isUnderRightDiagonalUpdated
+          && (isUnderRightDiagonalFree || isUnderRightDiagonalLessDense || isUnderRightDiagonalGas)
+          && (isRightFree || isRightLessDense || isRightGas)
+        ) {
           replaceUnit(x, y, x + 1, y - 1);
-        } else if (isLeftFree || isLeftLessDense) {
+        } else if (!isLeftUpdated && (isLeftFree || isLeftLessDense || isLeftGas)) {
           replaceUnit(x, y, x - 1, y);
-        } else if (isRightFree || isRightLessDense) {
+        } else if (!isRightUpdated && (isRightFree || isRightLessDense || isRightGas)) {
           replaceUnit(x, y, x + 1, y);
         }
       } else if (y === 0) {
-        if (isLeftFree || isLeftLessDense) {
+        if (!isLeftUpdated && (isLeftFree || isLeftLessDense || isLeftGas)) {
           replaceUnit(x, y, x - 1, y);
-        } else if (isRightFree || isRightLessDense) {
+        } else if (!isRightUpdated && (isRightFree || isRightLessDense || isRightGas)) {
           replaceUnit(x, y, x + 1, y);
         }
       }
@@ -222,7 +351,7 @@ export default class PhysicEngine {
       }
     }
 
-    for (let y = 0; y < worldSideSize; y += 1) {
+    const processLine = (y: number) => {
       const dir = Boolean(getRandomInt(0, 1));
 
       if (dir === false) {
@@ -233,6 +362,22 @@ export default class PhysicEngine {
         for (let x = worldSideSize - 1; x >= 0; x -= 1) {
           processUnits(x, y);
         }
+      }
+    };
+
+    if (this.isLineByLineResolve) {
+      let y = 0;
+
+      if (this.lastY < worldSideSize) {
+        y = this.lastY++;
+      } else {
+        this.lastY = 0;
+      }
+
+      processLine(y);
+    } else {
+      for (let y = 0; y < worldSideSize; y += 1) {
+        processLine(y);
       }
     }
 
