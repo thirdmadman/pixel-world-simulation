@@ -29,7 +29,6 @@ export default class PhysicEngine {
 
     const replaceUnit = (xSrc: number, ySrc: number, xDist: number, yDist: number, isUpdated = true) => {
       const tmp = currentWorld[xDist][yDist];
-      console.error('Replacing', tmp);
       currentWorld[xDist][yDist] = currentWorld[xSrc][ySrc];
       if (currentWorld[xDist][yDist]) {
         currentWorld[xDist][yDist]!.isUpdated = isUpdated;
@@ -42,7 +41,6 @@ export default class PhysicEngine {
 
     const displaceLiquidOrGasUnit = (x: number, y: number, isLiquid: boolean) => {
       const displaceLine = (yAdd: number) => {
-        console.error('gg');
         if (!currentWorld[x][y + yAdd]) {
           replaceUnit(x, y, x, y + yAdd);
           return true;
@@ -81,7 +79,6 @@ export default class PhysicEngine {
     const displaceOrReplaceUnit = (xSrc: number, ySrc: number, xDist: number, yDist: number, isUpdated = true) => {
       if (!currentWorld[xDist][yDist]) {
         replaceUnit(xSrc, ySrc, xDist, yDist, isUpdated);
-        console.error('Replace');
         return;
       }
 
@@ -89,7 +86,6 @@ export default class PhysicEngine {
 
       const isDisplaced = displaceLiquidOrGasUnit(xDist, yDist, isLiquid);
       if (isDisplaced) {
-        console.error('Displaced');
         return;
       }
 
