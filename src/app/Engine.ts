@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 /* eslint-disable class-methods-use-this */
 import PhysicEngine from './PhysicEngine';
 import Point from './Point';
@@ -93,12 +94,65 @@ export default class Engine {
   }
 
   extractFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
+    const mixColors = (colorA: number, colorB: number) => {
+      // 0xff11aa00 a B G R
+
+      const alphaA = Number(BigInt(colorA) >> BigInt(24));
+      const alphaB = Number(BigInt(colorB) >> BigInt(24));
+
+      if (alphaB === 255) {
+        return colorB;
+      }
+
+      const alphaAInProc = alphaA / 0xff;
+      const alphaBInProc = alphaB / 0xff;
+      const colorANoAlpha = Number(BigInt(colorA) & BigInt(0x00ffffff));
+      const colorBNoAlpha = Number(BigInt(colorB) & BigInt(0x00ffffff));
+
+      const resultAlpha = (1 - alphaAInProc) * alphaBInProc + alphaAInProc;
+
+      const extract = (
+        cA: number,
+        cB: number,
+        alA: number,
+        alB: number,
+        rA: number,
+      ) => Math.round(((1 - alA) * alB * cB + alA * cA) / rA);
+
+      const rA = colorANoAlpha & 0xff;
+      const gA = (colorANoAlpha & 0xff00) >> 8;
+      const bA = (colorANoAlpha & 0xff0000) >> 16;
+
+      const rB = colorBNoAlpha & 0xff;
+      const gB = (colorBNoAlpha & 0xff00) >> 8;
+      const bB = (colorBNoAlpha & 0xff0000) >> 16;
+
+      const newR = extract(rA, rB, alphaAInProc, alphaBInProc, resultAlpha);
+      const newG = extract(gA, gB, alphaAInProc, alphaBInProc, resultAlpha);
+      const newB = extract(bA, bB, alphaAInProc, alphaBInProc, resultAlpha);
+
+      const color = ((newB << 16) + (newG << 8) + newR);
+
+      const result = (BigInt((Math.round(resultAlpha * 255))) << BigInt(24)) + BigInt(color);
+
+      return result;
+    };
+
     const frame = new Uint32Array(frameWidth * frameHeight);
     let frameIndex = (frameHeight - 1) * frameWidth;
     for (let y = framePositionY; y < framePositionY + frameHeight; y += 1) {
       for (let x = framePositionX; x < framePositionX + frameWidth; x += 1) {
         if (this.gameWorldState[x][y] !== null) {
-          frame[frameIndex] = this.gameWorldState[x][y]?.unitState.unitColor || 0x00000000;
+          if (this.gameWorldState[x][y]?.unitState) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const { unitColor } = this.gameWorldState[x][y]!.unitState;
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const { unitDecalColor } = this.gameWorldState[x][y]!.unitState;
+            const newColor = mixColors(unitColor, unitDecalColor);
+            frame[frameIndex] = Number(newColor);
+          }
+
+          // frame[frameIndex] = 0x0;
         }
 
         frameIndex += 1;
@@ -137,6 +191,9 @@ export default class Engine {
         case 5: {
           return null;
         }
+        case 6: {
+          return 'set-on-fire';
+        }
 
         default:
           break;
@@ -153,7 +210,13 @@ export default class Engine {
         for (let x = 0; x < squareSize; x += 1) {
           const generatedUnit = generateNewUnit();
           if (squareStartX + x < this.worldSquareSide && squareStartY + y < this.worldSquareSide) {
-            if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
+            if (generatedUnit === 'set-on-fire') {
+              if (this.gameWorldState[squareStartX + x][squareStartY + y]
+                && this.gameWorldState[squareStartX + x][squareStartY + y]?.getUnitType().unitIsFlammable) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                this.gameWorldState[squareStartX + x][squareStartY + y]!.unitState.unitIsOnFire = true;
+              }
+            } else if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
               this.gameWorldState[squareStartX + x][squareStartY + y] = generatedUnit;
               if (generatedUnit !== null) {
                 generatedUnit.unitId = this.lastUnitId++;
@@ -166,7 +229,12 @@ export default class Engine {
     }
 
     const generatedUnit = generateNewUnit();
-    if (!this.gameWorldState[mousePosition.x][mousePosition.y] || generatedUnit === null) {
+    if (generatedUnit === 'set-on-fire') {
+      if (this.gameWorldState[mousePosition.x][mousePosition.y]) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.gameWorldState[mousePosition.x][mousePosition.y]!.unitState.unitIsOnFire = true;
+      }
+    } else if (!this.gameWorldState[mousePosition.x][mousePosition.y] || generatedUnit === null) {
       this.gameWorldState[mousePosition.x][mousePosition.y] = generatedUnit;
       if (generatedUnit !== null) {
         generatedUnit.unitId = this.lastUnitId++;
