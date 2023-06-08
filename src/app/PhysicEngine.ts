@@ -317,6 +317,46 @@ export default class PhysicEngine {
       }
     };
 
+    const isInBounds = (x: number, y: number) => {
+      if (x >= 0 && x < worldSideSize && y >= 0 && y < worldSideSize) {
+        return true;
+      }
+      return false;
+    };
+
+    const processFire = (x: number, y: number) => {
+      const minRandomColor = 0x00;
+      const maxRandomColor = 0xe9;
+      const baseColor = 0x0000ff + 0xff000000; // b55a00
+      // Colors order in 0x00caca is B G R
+
+      const randColor = getRandomInt(minRandomColor, maxRandomColor);
+      const resColor = randColor * 16 ** 2;
+      const unitColor = baseColor + resColor;
+
+      currentWorld[x][y]!.unitState.unitDecalColor = unitColor;
+      currentWorld[x][y]!.unitState.unitHealth -= 1;
+
+      const setOnFireNeighbor = (xNeighbor: number, yNeighbor: number) => {
+        if (!isInBounds(xNeighbor, yNeighbor)) {
+          return;
+        }
+
+        if (currentWorld[xNeighbor][yNeighbor] && currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitIsFlammable) {
+          if (currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability <= 0) {
+            currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
+          } else {
+            currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability -= 1;
+          }
+        }
+      };
+
+      setOnFireNeighbor(x - 1, y);
+      setOnFireNeighbor(x + 1, y);
+      setOnFireNeighbor(x, y + 1);
+      setOnFireNeighbor(x, y - 1);
+    };
+
     const processUnit = (x: number, y: number) => {
       if (!currentWorld[x][y]?.isUpdated) {
         if (currentWorld[x][y]?.getUnitType().unitIsGas) {
@@ -333,6 +373,12 @@ export default class PhysicEngine {
       if (currentWorld[x][y] != null) {
         if (!currentWorld[x][y]?.getUnitType().unitIsStatic) {
           processUnit(x, y);
+        }
+        if (currentWorld[x][y]?.unitState.unitIsOnFire) {
+          processFire(x, y);
+        }
+        if (currentWorld[x][y] && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.unitHealth <= 0) {
+          currentWorld[x][y] = null;
         }
       }
     };
