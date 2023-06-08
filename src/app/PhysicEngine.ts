@@ -343,7 +343,10 @@ export default class PhysicEngine {
         }
 
         if (currentWorld[xNeighbor][yNeighbor] && currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitIsFlammable) {
-          if (currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability <= 0) {
+          if (currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire) {
+            return;
+          }
+          if (currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability <= 1) {
             currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
           } else {
             currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability -= 1;
