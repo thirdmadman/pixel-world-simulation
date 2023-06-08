@@ -4,9 +4,11 @@ import { Transformations } from './Transformations';
 export default interface UnitType {
   unitName: string;
   unitDefaultHealth: number;
+  unitDurability: number;
   unitIsGas: boolean;
   unitIsFlammable: boolean;
-  flameSustainability: number;
+  unitDefaultFlameSustainability: number;
+  unitDefaultFireHP: number;
   unitDefaultColor: UnitDefaultColor;
   unitIsLiquid: boolean;
   unitIsStatic: boolean;
