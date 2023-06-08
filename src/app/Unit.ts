@@ -36,6 +36,8 @@ export default class Unit {
         unitHealth: defaultType.unitDefaultHealth,
         unitIsOnFire: false,
         unitColor,
+        unitDecalColor: 0,
+        flameSustainability: defaultType.flameSustainability,
       } as UnitState;
     } else {
       this.unitState = unitState;
