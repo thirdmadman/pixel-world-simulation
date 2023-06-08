@@ -236,8 +236,8 @@ export const UnitTypesArray = [
     unitDefaultColor: {
       minRandomColor: 0x00,
       maxRandomColor: 0x14,
-      colorShiftNumbers: 0x00f,
-      baseColor: 0x000000 + 0xff000000,
+      colorShiftNumbers: 0xfff,
+      baseColor: 0x23237e + 0xff000000,
     },
     unitTransformations: {
       toFreeze: null,
@@ -262,7 +262,7 @@ export const UnitTypesArray = [
       minRandomColor: 0x00,
       maxRandomColor: 0x14,
       colorShiftNumbers: 0x00f,
-      baseColor: 0x000000 + 0xff000000,
+      baseColor: 0x1978a6 + 0xff000000,
     },
     unitTransformations: {
       toFreeze: null,

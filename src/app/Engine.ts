@@ -198,6 +198,14 @@ export default class Engine {
         case 7: {
           return 'set-on-fire';
         }
+        case 8: {
+          unitTypeName = 'rock-hard';
+          break;
+        }
+        case 9: {
+          unitTypeName = 'wood-wall';
+          break;
+        }
 
         default:
           break;
