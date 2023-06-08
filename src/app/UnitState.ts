@@ -4,4 +4,5 @@ export interface UnitState {
   unitColor: number;
   unitDecalColor: number;
   flameSustainability: number;
+  fireHP: number;
 }
