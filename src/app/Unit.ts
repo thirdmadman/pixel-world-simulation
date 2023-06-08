@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 import { UnitState } from './UnitState';
 import { getUnitTypeByUnitTypeName } from './UnitTypes';
 import getRandomInt from './utils';
@@ -29,7 +30,10 @@ export default class Unit {
       const { unitDefaultColor } = defaultType;
 
       const randColor = getRandomInt(unitDefaultColor.minRandomColor, unitDefaultColor.maxRandomColor);
-      const resColor = randColor + randColor * 16 ** 2 + randColor * 16 ** 4;
+      const r = ((unitDefaultColor.colorShiftNumbers & 0x00f) >> 3);
+      const g = ((unitDefaultColor.colorShiftNumbers & 0x0f0) >> 4) >> 3;
+      const b = ((unitDefaultColor.colorShiftNumbers & 0xf00) >> 8) >> 3;
+      const resColor = randColor * r + (randColor * 16 ** 2) * g + (randColor * 16 ** 4) * b;
       const unitColor = unitDefaultColor.baseColor + resColor;
 
       this.unitState = {
@@ -37,8 +41,9 @@ export default class Unit {
         unitIsOnFire: false,
         unitColor,
         unitDecalColor: 0,
-        flameSustainability: defaultType.flameSustainability,
-      } as UnitState;
+        flameSustainability: defaultType.unitDefaultFlameSustainability,
+        fireHP: defaultType.unitDefaultFireHP,
+      };
     } else {
       this.unitState = unitState;
     }
