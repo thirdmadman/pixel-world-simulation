@@ -6,6 +6,7 @@ export default interface UnitType {
   unitDefaultHealth: number;
   unitIsGas: boolean;
   unitIsFlammable: boolean;
+  flameSustainability: number;
   unitDefaultColor: UnitDefaultColor;
   unitIsLiquid: boolean;
   unitIsStatic: boolean;
