@@ -192,6 +192,10 @@ export default class Engine {
           return null;
         }
         case 6: {
+          unitTypeName = 'black-oil';
+          break;
+        }
+        case 7: {
           return 'set-on-fire';
         }
 
