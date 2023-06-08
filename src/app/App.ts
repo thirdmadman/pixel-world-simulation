@@ -5,7 +5,7 @@ import { Renderer } from './Renderer';
 export class App {
   public renderer: Renderer;
 
-  public worldSideSize = 1000;
+  public worldSideSize = 166;
 
   private engine = new Engine(this.worldSideSize);
 
@@ -31,7 +31,7 @@ export class App {
 
   private isPause = false;
 
-  private gameMaxCountMaterials = 5;
+  private gameMaxCountMaterials = 9;
 
   constructor() {
     document.body.appendChild(this.canvas);
