@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Unit from './Unit';
-import getRandomInt from './utils';
+import { getRandomInt } from './utils';
 
 /* eslint-disable class-methods-use-this */
 export default class PhysicEngine {
@@ -330,12 +330,16 @@ export default class PhysicEngine {
       const baseColor = 0x0000ff + 0xff000000; // b55a00
       // Colors order in 0x00caca is B G R
 
-      const randColor = getRandomInt(minRandomColor, maxRandomColor);
-      const resColor = randColor * 16 ** 2;
-      const unitColor = baseColor + resColor;
+      let unitColor = 0x00000000;
+
+      if (getRandomInt(0, 100) >= 30) {
+        const randColor = getRandomInt(minRandomColor, maxRandomColor);
+        const resColor = randColor * 16 ** 2;
+        unitColor = baseColor + resColor;
+      }
 
       currentWorld[x][y]!.unitState.unitDecalColor = unitColor;
-      currentWorld[x][y]!.unitState.unitHealth -= 1;
+      currentWorld[x][y]!.unitState.fireHP -= 1;
 
       const setOnFireNeighbor = (xNeighbor: number, yNeighbor: number) => {
         if (!isInBounds(xNeighbor, yNeighbor)) {
@@ -347,7 +351,11 @@ export default class PhysicEngine {
             return;
           }
           if (currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability <= 1) {
-            currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
+            const random = getRandomInt(0, 1000);
+            const prob = 1000 - (currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitDefaultFlameSustainability || 0);
+            if (random >= prob) {
+              currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
+            }
           } else {
             currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability -= 1;
           }
@@ -381,6 +389,12 @@ export default class PhysicEngine {
           processFire(x, y);
         }
         if (currentWorld[x][y] && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.unitHealth <= 0) {
+          currentWorld[x][y] = null;
+        }
+        if (
+          currentWorld[x][y] && currentWorld[x][y]?.getUnitType().unitIsFlammable
+          && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.fireHP <= 0
+        ) {
           currentWorld[x][y] = null;
         }
       }

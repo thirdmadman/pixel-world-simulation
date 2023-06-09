@@ -1,7 +1,7 @@
 /* eslint-disable no-bitwise */
 import { UnitState } from './UnitState';
 import { getUnitTypeByUnitTypeName } from './UnitTypes';
-import getRandomInt from './utils';
+import { getRandomInt } from './utils';
 import Vector from './Vector';
 
 export default class Unit {
