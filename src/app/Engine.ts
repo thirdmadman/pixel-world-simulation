@@ -46,7 +46,7 @@ export default class Engine {
 
   private gameMaxCountMaterials = 9;
 
-  private ui = new UI();
+  private ui = new UI({});
 
   // gameWorld = new Uint32Array(4);
 
@@ -78,6 +78,22 @@ export default class Engine {
     }
 
     this.gameWorldState = nodes as Array<Array<Unit | null>>;
+
+    const actions = {
+      'switch-create-pure-water': () => { this.unitCreationType = 0; },
+      'switch-create-yellow-sand': () => { this.unitCreationType = 1; },
+      'switch-create-gray-rock': () => { this.unitCreationType = 2; },
+      'switch-create-flammable-gas': () => { this.unitCreationType = 3; },
+      'switch-create-red-blood': () => { this.unitCreationType = 4; },
+      'switch-create-black-oil': () => { this.unitCreationType = 6; },
+      'switch-create-rock-hard': () => { this.unitCreationType = 8; },
+      'switch-create-wood-wall': () => { this.unitCreationType = 9; },
+      'switch-remove': () => { this.unitCreationType = 5; },
+      'switch-ignite': () => { this.unitCreationType = 7; },
+      'default-action': () => this.mainAction(),
+    };
+
+    this.ui = new UI(actions);
 
     // const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
     // this.gameWorldState[
@@ -145,8 +161,6 @@ export default class Engine {
           if (newColor) {
             frame[frameIndex] = newColor;
           }
-
-          // frame[frameIndex] = 0x0;
         }
 
         frameIndex += 1;
@@ -156,7 +170,12 @@ export default class Engine {
     return frame;
   }
 
-  handleMouseLeftButton() {
+  handleMouseLeftButton(mousePosition: Point) {
+    this.mousePosition = mousePosition;
+    this.ui.handleClick(mousePosition);
+  }
+
+  mainAction() {
     this.createUnitAtPoint(this.mousePosition, this.unitCreationType, this.unitCreationSquareSize);
   }
 
@@ -259,7 +278,8 @@ export default class Engine {
 
     const generatedUnit = generateNewUnit();
     if (generatedUnit === 'set-on-fire') {
-      if (this.gameWorldState[mousePosition.x][mousePosition.y]) {
+      if (this.gameWorldState[mousePosition.x][mousePosition.y]
+        && this.gameWorldState[mousePosition.x][mousePosition.y]?.getUnitType().unitIsFlammable) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         this.gameWorldState[mousePosition.x][mousePosition.y]!.unitState.unitIsOnFire = true;
       }
