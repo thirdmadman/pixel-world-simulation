@@ -1,6 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import PhysicEngine from './PhysicEngine';
 import Point from './Point';
+import { UI } from './UI';
 import Unit from './Unit';
 import { mixColors } from './utils';
 
@@ -19,25 +20,33 @@ interface ISaveFile {
 }
 
 export default class Engine {
-  frameWidth = 0;
+  private frameWidth = 0;
 
-  frameHeight = 0;
+  private frameHeight = 0;
 
-  framePositionX = 0;
+  private framePositionX = 0;
 
-  framePositionY = 0;
+  private framePositionY = 0;
 
-  physicEngine = new PhysicEngine();
+  private physicEngine = new PhysicEngine();
 
-  worldSquareSide = 2;
+  private worldSquareSide = 2;
 
-  mousePosition = { x: 0, y: 0 } as Point;
+  private mousePosition = { x: 0, y: 0 } as Point;
 
-  lastUnitId = 0;
+  private lastUnitId = 0;
 
-  save = '';
+  private save = '';
 
-  isPhysicsEnginePause = false;
+  private isPhysicsEnginePause = false;
+
+  private unitCreationType = 0;
+
+  private unitCreationSquareSize = 0;
+
+  private gameMaxCountMaterials = 9;
+
+  private ui = new UI();
 
   // gameWorld = new Uint32Array(4);
 
@@ -56,10 +65,19 @@ export default class Engine {
   gameWorldState: Array<Array<Unit | null>> = Array.from(Array(4), () => new Array<Unit | null>(4));
 
   constructor(worldSquareSide: number) {
-    // this.gameWorld = new Uint32Array(worldSize);
     this.worldSquareSide = worldSquareSide;
 
-    this.gameWorldState = Array.from(Array(worldSquareSide), () => new Array<Unit>(worldSquareSide));
+    const nodes = new Array(worldSquareSide);
+    const copy = new Array(worldSquareSide);
+    for (let i = 0; i < worldSquareSide; i++) {
+      copy[i] = null;
+    }
+
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i] = copy.slice(0);
+    }
+
+    this.gameWorldState = nodes as Array<Array<Unit | null>>;
 
     // const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
     // this.gameWorldState[
@@ -85,26 +103,43 @@ export default class Engine {
 
   setMousedPosition(point: Point) {
     this.mousePosition = point;
+    this.ui.setMousedPosition(point);
   }
 
   setRendererSize(width: number, height: number) {
     this.frameWidth = width;
     this.frameHeight = height;
+
+    this.ui.setRendererSize(width, height);
   }
 
   extractFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
+    const uiState = this.ui.extractFrame();
+
     const frame = new Uint32Array(frameWidth * frameHeight);
     let frameIndex = (frameHeight - 1) * frameWidth;
     for (let y = framePositionY; y < framePositionY + frameHeight; y += 1) {
       for (let x = framePositionX; x < framePositionX + frameWidth; x += 1) {
-        if (this.gameWorldState[x][y] !== null) {
-          if (this.gameWorldState[x][y]?.unitState) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const { unitColor } = this.gameWorldState[x][y]!.unitState;
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const { unitDecalColor } = this.gameWorldState[x][y]!.unitState;
-            const newColor = mixColors(unitColor, unitDecalColor);
-            frame[frameIndex] = Number(newColor);
+        const uiPixel = uiState[x - framePositionX][y - framePositionY];
+        if (this.gameWorldState[x][y] !== null || uiPixel) {
+          let newColor: null | number = null;
+          if (this.gameWorldState[x][y] !== null) {
+            if (this.gameWorldState[x][y]?.unitState) {
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              const { unitColor } = this.gameWorldState[x][y]!.unitState;
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              const { unitDecalColor } = this.gameWorldState[x][y]!.unitState;
+              newColor = Number(mixColors(unitColor, unitDecalColor));
+            }
+          }
+
+          if (uiPixel != null) {
+            const uiColor = uiPixel.color;
+            newColor = Number(mixColors(newColor || 0x0, uiColor));
+          }
+
+          if (newColor) {
+            frame[frameIndex] = newColor;
           }
 
           // frame[frameIndex] = 0x0;
@@ -114,8 +149,31 @@ export default class Engine {
       }
       frameIndex -= frameWidth * 2;
     }
-
     return frame;
+  }
+
+  handleMouseLeftButton() {
+    this.createUnitAtPoint(this.mousePosition, this.unitCreationType, this.unitCreationSquareSize);
+  }
+
+  handleMouseWheelUp() {
+    if (this.unitCreationSquareSize < this.frameHeight * 2) {
+      this.unitCreationSquareSize += 1;
+    }
+  }
+
+  handleMouseWheelDown() {
+    if (this.unitCreationSquareSize > 0) {
+      this.unitCreationSquareSize -= 1;
+    }
+  }
+
+  handleMouseMiddleButton() {
+    if (this.unitCreationType < this.gameMaxCountMaterials) {
+      this.unitCreationType += 1;
+    } else {
+      this.unitCreationType = 0;
+    }
   }
 
   createUnitAtPoint(mousePosition: Point, unitType: number, squareSize: number) {

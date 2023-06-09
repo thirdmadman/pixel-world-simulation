@@ -25,16 +25,20 @@ export class App {
 
   private virtualMousePosition = { x: 0, y: 0 } as Point;
 
-  private matterType = 0;
-
-  private pointerSquareSize = 0;
-
   private isPause = false;
 
-  private gameMaxCountMaterials = 9;
-
   constructor() {
-    document.body.appendChild(this.canvas);
+    this.canvas.classList.add('canvas-renderer');
+
+    const appEl = document.body.querySelector('.app');
+    if (appEl) {
+      appEl.appendChild(this.canvas);
+    }
+
+    const handleMouseLeftButton = () => this.engine.handleMouseLeftButton();
+    const handleMouseWheelUp = () => this.engine.handleMouseWheelUp();
+    const handleMouseWheelDown = () => this.engine.handleMouseWheelDown();
+    const handleMouseMiddleButton = () => this.engine.handleMouseMiddleButton();
 
     const getMousePos = (canvas: HTMLCanvasElement, e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -89,13 +93,9 @@ export class App {
       'wheel',
       (e) => {
         if (-e.deltaY < 0) {
-          if (this.pointerSquareSize > 0) {
-            this.pointerSquareSize -= 1;
-          }
+          handleMouseWheelDown();
         } else if (-e.deltaY > 0) {
-          if (this.pointerSquareSize < this.frameHeight * 2) {
-            this.pointerSquareSize += 1;
-          }
+          handleMouseWheelUp();
         }
       },
       false,
@@ -138,20 +138,13 @@ export class App {
       };
     };
 
-    // eslint-disable-next-line max-len
-    const createUnit = () => this.engine.createUnitAtPoint(this.virtualMousePosition, this.matterType, this.pointerSquareSize);
-
-    clickAndHold(this.canvas, createUnit);
+    clickAndHold(this.canvas, handleMouseLeftButton);
 
     this.canvas.addEventListener(
       'mousedown',
       (e) => {
         if (e.button === 1) {
-          if (this.matterType < this.gameMaxCountMaterials) {
-            this.matterType += 1;
-          } else {
-            this.matterType = 0;
-          }
+          handleMouseMiddleButton();
         }
       },
       false,
