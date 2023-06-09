@@ -1,6 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import Point from './Point';
 import { getUnitTypeByUnitTypeName } from './UnitTypes';
+import { getNotTransparent } from './utils';
 
 interface UIPixel {
   color: number;
@@ -73,66 +74,74 @@ export class UI {
   }
 
   drawCreationMenu() {
-    const createWater: UIPixel = {
-      color: getUnitTypeByUnitTypeName('pure-water').unitDefaultColor.baseColor,
-      actionType: 'switch-create-pure-water',
+    const buttonsPixels: Array<UIPixel> = [
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('pure-water').unitDefaultColor.baseColor),
+        actionType: 'switch-create-pure-water',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('yellow-sand').unitDefaultColor.baseColor),
+        actionType: 'switch-create-yellow-sand',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('gray-rock').unitDefaultColor.baseColor),
+        actionType: 'switch-create-gray-rock',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('flammable-gas').unitDefaultColor.baseColor),
+        actionType: 'switch-create-flammable-gas',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('red-blood').unitDefaultColor.baseColor),
+        actionType: 'switch-create-red-blood',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('black-oil').unitDefaultColor.baseColor),
+        actionType: 'switch-create-black-oil',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('rock-hard').unitDefaultColor.baseColor),
+        actionType: 'switch-create-rock-hard',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('wood-wall').unitDefaultColor.baseColor),
+        actionType: 'switch-create-wood-wall',
+      },
+
+      {
+        color: 0xff0000ff,
+        actionType: 'switch-remove',
+      },
+
+      {
+        color: getNotTransparent(getUnitTypeByUnitTypeName('yellow-flame').unitDefaultColor.baseColor),
+        actionType: 'switch-ignite',
+      },
+    ];
+
+    const drawCreationMenuButtons = (
+      buttons: Array<UIPixel>,
+      startX: number,
+      startY: number,
+      buttonSize: number,
+      buttonSpace: number,
+    ) => {
+      const currentX = startX;
+      let currentY = startY;
+      buttons.forEach((element) => {
+        this.drawRectangle(element, currentX, currentY, buttonSize, buttonSize);
+        currentY -= (buttonSize + buttonSpace);
+      });
     };
 
-    const createSand: UIPixel = {
-      color: getUnitTypeByUnitTypeName('yellow-sand').unitDefaultColor.baseColor,
-      actionType: 'switch-create-yellow-sand',
-    };
-
-    const createRock: UIPixel = {
-      color: getUnitTypeByUnitTypeName('gray-rock').unitDefaultColor.baseColor,
-      actionType: 'switch-create-gray-rock',
-    };
-
-    const createGas: UIPixel = {
-      color: getUnitTypeByUnitTypeName('flammable-gas').unitDefaultColor.baseColor,
-      actionType: 'switch-create-flammable-gas',
-    };
-
-    const createBlood: UIPixel = {
-      color: getUnitTypeByUnitTypeName('red-blood').unitDefaultColor.baseColor,
-      actionType: 'switch-create-red-blood',
-    };
-
-    const createOil: UIPixel = {
-      color: getUnitTypeByUnitTypeName('black-oil').unitDefaultColor.baseColor,
-      actionType: 'switch-create-black-oil',
-    };
-
-    const createRockHard: UIPixel = {
-      color: getUnitTypeByUnitTypeName('rock-hard').unitDefaultColor.baseColor,
-      actionType: 'switch-create-rock-hard',
-    };
-
-    const createWoodWall: UIPixel = {
-      color: getUnitTypeByUnitTypeName('wood-wall').unitDefaultColor.baseColor,
-      actionType: 'switch-create-wood-wall',
-    };
-
-    const remove: UIPixel = {
-      color: 0xff0000ff,
-      actionType: 'switch-remove',
-    };
-
-    const ignite: UIPixel = {
-      color: getUnitTypeByUnitTypeName('yellow-flame').unitDefaultColor.baseColor,
-      actionType: 'switch-ignite',
-    };
-
-    this.drawRectangle(createWater, 160, 120, 4, 4);
-    this.drawRectangle(createSand, 160, 112, 4, 4);
-    this.drawRectangle(createRock, 160, 104, 4, 4);
-    this.drawRectangle(createGas, 160, 96, 4, 4);
-    this.drawRectangle(createBlood, 160, 88, 4, 4);
-    this.drawRectangle(createOil, 160, 80, 4, 4);
-    this.drawRectangle(createRockHard, 160, 72, 4, 4);
-    this.drawRectangle(createWoodWall, 160, 64, 4, 4);
-    this.drawRectangle(remove, 160, 56, 4, 4);
-    this.drawRectangle(ignite, 160, 48, 4, 4);
+    drawCreationMenuButtons(buttonsPixels, 160, 120, 4, 4);
   }
 
   drawUI() {
