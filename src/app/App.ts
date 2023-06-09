@@ -35,7 +35,7 @@ export class App {
       appEl.appendChild(this.canvas);
     }
 
-    const handleMouseLeftButton = () => this.engine.handleMouseLeftButton();
+    const handleMouseLeftButton = (mPos: Point) => this.engine.handleMouseLeftButton(mPos);
     const handleMouseWheelUp = () => this.engine.handleMouseWheelUp();
     const handleMouseWheelDown = () => this.engine.handleMouseWheelDown();
     const handleMouseMiddleButton = () => this.engine.handleMouseMiddleButton();
@@ -138,7 +138,7 @@ export class App {
       };
     };
 
-    clickAndHold(this.canvas, handleMouseLeftButton);
+    clickAndHold(this.canvas, () => handleMouseLeftButton(this.virtualMousePosition));
 
     this.canvas.addEventListener(
       'mousedown',
