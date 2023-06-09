@@ -253,7 +253,7 @@ export const UnitTypesArray = [
     unitIsStatic: true,
     unitIsGas: false,
     unitIsFlammable: true,
-    unitDefaultFlameSustainability: 10,
+    unitDefaultFlameSustainability: 100,
     unitDefaultFireHP: 600,
     unitDefaultHealth: 2000,
     unitDurability: 10,
