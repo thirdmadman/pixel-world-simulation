@@ -7,13 +7,13 @@ export const getRandomInt = (min: number, max: number) => {
 
 export const mixColors = (colorA: number, colorB: number) => {
   // 0xff11aa00 a B G R
-
-  const alphaA = Number(BigInt(colorA) >> BigInt(24));
   const alphaB = Number(BigInt(colorB) >> BigInt(24));
 
   if (alphaB === 255) {
     return colorB;
   }
+
+  const alphaA = Number(BigInt(colorA) >> BigInt(24));
 
   const alphaAInProc = alphaA / 0xff;
   const alphaBInProc = alphaB / 0xff;
