@@ -48,3 +48,5 @@ export const mixColors = (colorA: number, colorB: number) => {
 
   return result;
 };
+
+export const getNotTransparent = (color: number) => (color & 0x00ffffff) + 0xff000000;
