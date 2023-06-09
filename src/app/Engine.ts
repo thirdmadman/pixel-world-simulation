@@ -129,7 +129,11 @@ export default class Engine {
               const { unitColor } = this.gameWorldState[x][y]!.unitState;
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               const { unitDecalColor } = this.gameWorldState[x][y]!.unitState;
-              newColor = Number(mixColors(unitColor, unitDecalColor));
+              if (unitDecalColor && unitDecalColor !== 0) {
+                newColor = Number(mixColors(unitColor, unitDecalColor));
+              } else {
+                newColor = unitColor;
+              }
             }
           }
 
