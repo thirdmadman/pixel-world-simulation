@@ -117,9 +117,15 @@ export default class Engine {
     this.isPhysicsEnginePause = isPause;
   }
 
+  setFramePosition(x: number, y: number) {
+    this.framePositionX = x;
+    this.framePositionY = y;
+    console.error(this.framePositionX, this.framePositionY);
+  }
+
   setMousedPosition(point: Point) {
     this.mousePosition = point;
-    this.ui.setMousedPosition(point);
+    this.ui.setMousedPosition({ x: point.x - this.framePositionX, y: point.y - this.framePositionY });
   }
 
   setRendererSize(width: number, height: number) {
@@ -172,7 +178,9 @@ export default class Engine {
 
   handleMouseLeftButton(mousePosition: Point) {
     this.mousePosition = mousePosition;
-    this.ui.handleClick(mousePosition);
+    this.ui.handleClick(
+      { x: mousePosition.x - this.framePositionX, y: mousePosition.y - this.framePositionY },
+    );
   }
 
   mainAction() {

@@ -5,7 +5,7 @@ import { Renderer } from './Renderer';
 export class App {
   public renderer: Renderer;
 
-  public worldSideSize = 166;
+  public worldSideSize = 500;
 
   private engine = new Engine(this.worldSideSize);
 
@@ -154,22 +154,26 @@ export class App {
       if (event.key === 'ArrowRight') {
         if (this.framePositionX < this.worldSideSize - this.frameWidth) {
           this.framePositionX += 1;
+          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
         }
       }
       if (event.key === 'ArrowLeft') {
         if (this.framePositionX > 0) {
           this.framePositionX -= 1;
+          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
         }
       }
 
       if (event.key === 'ArrowUp') {
         if (this.framePositionY < this.worldSideSize - this.frameHeight) {
           this.framePositionY += 1;
+          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
         }
       }
       if (event.key === 'ArrowDown') {
         if (this.framePositionY > 0) {
           this.framePositionY -= 1;
+          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
         }
       }
       if (event.key === ' ') {
