@@ -152,7 +152,6 @@ export class UI {
   handleClick(mousePosition: Point) {
     this.mousePosition = mousePosition;
     const action = this.UIState[mousePosition.x][mousePosition.y]?.actionType;
-    console.log(this.UIState);
     if (action) {
       this.dispatchAction(action);
     } else {
@@ -174,21 +173,6 @@ export class UI {
     this.UIState = nodes as Array<Array<UIPixel | null>>;
 
     this.drawUI();
-
-    // const frame = new Uint32Array(this.frameWidth * this.frameHeight);
-    // let frameIndex = (this.frameHeight - 1) * this.frameWidth;
-    // for (let y = 0; y < this.frameHeight; y += 1) {
-    //   for (let x = 0; x < this.frameWidth; x += 1) {
-    //     if (UIState[x][y] != null) {
-    //       const color = UIState[x][y]?.color;
-    //       if (color) {
-    //         frame[frameIndex] = color;
-    //       }
-    //     }
-    //     frameIndex += 1;
-    //   }
-    //   frameIndex -= this.frameWidth * 2;
-    // }
 
     return this.UIState;
   }
