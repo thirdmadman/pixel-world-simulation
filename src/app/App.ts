@@ -191,7 +191,7 @@ export class App {
           this.engine.setFramePosition(this.framePositionX, this.framePositionY);
         }
       }
-      if (event.key === ' ') {
+      if (event.key === 'Escape') {
         this.isPause = !this.isPause;
         this.engine.setPause(this.isPause);
       }
