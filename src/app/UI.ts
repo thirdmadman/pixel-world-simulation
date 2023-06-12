@@ -167,13 +167,11 @@ export class UI {
   }
 
   handleClickDown(mousePosition: Point) {
-    console.log(this.mouseUIPosition, this.mousePosition);
     this.setMousePosition(mousePosition);
     this.isMouseDown = true;
   }
 
   handleClickUp(mousePosition: Point) {
-    console.log(this.mouseUIPosition, this.mousePosition);
     this.setMousePosition(mousePosition);
     this.isMouseDown = false;
   }
