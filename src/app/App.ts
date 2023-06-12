@@ -38,7 +38,6 @@ export class App {
     // const handleMouseLeftButton = (mPos: Point) => this.engine.handleMouseLeftButton(mPos);
     const handleMouseWheelUp = () => this.engine.handleMouseWheelUp();
     const handleMouseWheelDown = () => this.engine.handleMouseWheelDown();
-    const handleMouseMiddleButton = () => this.engine.handleMouseMiddleButton();
 
     const getMousePos = (canvas: HTMLCanvasElement, e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -140,15 +139,27 @@ export class App {
 
     // clickAndHold(this.canvas, () => handleMouseLeftButton(this.virtualMousePosition));
 
-    this.canvas.addEventListener('mousedown', () => this.engine.handleMouseLeftButtonDown(this.virtualMousePosition));
-
-    this.canvas.addEventListener('mouseup', () => this.engine.handleMouseLeftButtonUp(this.virtualMousePosition));
-
     this.canvas.addEventListener(
       'mousedown',
       (e) => {
-        if (e.button === 1) {
-          handleMouseMiddleButton();
+        switch (e.button) {
+          case 0:
+            this.engine.handleMouseLeftButtonDown(this.virtualMousePosition);
+            break;
+          default: console.error(e.button);
+        }
+      },
+      false,
+    );
+
+    this.canvas.addEventListener(
+      'mouseup',
+      (e) => {
+        switch (e.button) {
+          case 0:
+            this.engine.handleMouseLeftButtonUp(this.virtualMousePosition);
+            break;
+          default: console.error(e.button);
         }
       },
       false,
