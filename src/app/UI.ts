@@ -9,7 +9,7 @@ interface UIPixel {
 }
 
 interface ActionsObject {
-  [propName: string]: () => void;
+  [propName: string]: (mousePosition: Point) => void;
 }
 
 export class UI {
@@ -17,11 +17,19 @@ export class UI {
 
   private frameHeight = 1;
 
-  private mousePosition = { x: 0, y: 0 } as Point;
+  private mousePosition: Point = { x: 0, y: 0 };
+
+  private mouseUIPosition: Point = { x: 0, y: 0 };
+
+  private framePosition: Point = { x: 0, y: 0 };
 
   private UIState: Array<Array<UIPixel | null>> = Array.from(Array(1), () => new Array<UIPixel>(1));
 
   private actions: ActionsObject = {};
+
+  private isMouseDown = false;
+
+  private eventsStack: Array<() => void> = [];
 
   constructor(actions: ActionsObject) {
     this.actions = actions;
@@ -32,32 +40,41 @@ export class UI {
     this.frameHeight = height;
   }
 
-  setMousedPosition(mousePosition: Point) {
+  setMousePosition(mousePosition: Point) {
     this.mousePosition = mousePosition;
+    this.mouseUIPosition.x = mousePosition.x - this.framePosition.x;
+    this.mouseUIPosition.y = mousePosition.y - this.framePosition.y;
   }
 
-  dispatchAction(action: string) {
+  setFramePosition(framePosition: Point) {
+    this.framePosition = framePosition;
+    this.mouseUIPosition.x = this.mousePosition.x - this.framePosition.x;
+    this.mouseUIPosition.y = this.mousePosition.y - this.framePosition.y;
+  }
+
+  findAction(action: string) {
     const actionFunc = this.actions[action];
     if (actionFunc) {
-      actionFunc();
+      return actionFunc;
     }
+    return () => {};
   }
 
   drawCursor() {
-    if (this.mousePosition.x + 1 < this.frameWidth) {
-      this.UIState[this.mousePosition.x + 1][this.mousePosition.y] = { color: 0xff000000, actionType: null };
+    if (this.mouseUIPosition.x + 1 < this.frameWidth) {
+      this.UIState[this.mouseUIPosition.x + 1][this.mouseUIPosition.y] = { color: 0xff000000, actionType: null };
     }
 
-    if (this.mousePosition.x - 1 > 0) {
-      this.UIState[this.mousePosition.x - 1][this.mousePosition.y] = { color: 0xff000000, actionType: null };
+    if (this.mouseUIPosition.x - 1 > 0) {
+      this.UIState[this.mouseUIPosition.x - 1][this.mouseUIPosition.y] = { color: 0xff000000, actionType: null };
     }
 
-    if (this.mousePosition.y + 1 < this.frameHeight) {
-      this.UIState[this.mousePosition.x][this.mousePosition.y + 1] = { color: 0xff000000, actionType: null };
+    if (this.mouseUIPosition.y + 1 < this.frameHeight) {
+      this.UIState[this.mouseUIPosition.x][this.mouseUIPosition.y + 1] = { color: 0xff000000, actionType: null };
     }
 
-    if (this.mousePosition.y - 1 > 0) {
-      this.UIState[this.mousePosition.x][this.mousePosition.y - 1] = { color: 0xff000000, actionType: null };
+    if (this.mouseUIPosition.y - 1 > 0) {
+      this.UIState[this.mouseUIPosition.x][this.mouseUIPosition.y - 1] = { color: 0xff000000, actionType: null };
     }
   }
 
@@ -149,14 +166,33 @@ export class UI {
     this.drawCursor();
   }
 
-  handleClick(mousePosition: Point) {
-    this.mousePosition = mousePosition;
-    const action = this.UIState[mousePosition.x][mousePosition.y]?.actionType;
-    if (action) {
-      this.dispatchAction(action);
-    } else {
-      this.dispatchAction('default-action');
+  handleClickDown(mousePosition: Point) {
+    console.log(this.mouseUIPosition, this.mousePosition);
+    this.setMousePosition(mousePosition);
+    this.isMouseDown = true;
+  }
+
+  handleClickUp(mousePosition: Point) {
+    console.log(this.mouseUIPosition, this.mousePosition);
+    this.setMousePosition(mousePosition);
+    this.isMouseDown = false;
+  }
+
+  collectActions() {
+    if (this.isMouseDown) {
+      const actionType = this.UIState[this.mouseUIPosition.x][this.mouseUIPosition.y]?.actionType;
+      if (actionType) {
+        const action = this.findAction(actionType);
+        this.eventsStack.push(() => action(this.mousePosition));
+      } else {
+        const action = this.findAction('default-action');
+        this.eventsStack.push(() => action(this.mousePosition));
+      }
     }
+
+    const result = this.eventsStack;
+    this.eventsStack = [];
+    return result;
   }
 
   extractFrame() {

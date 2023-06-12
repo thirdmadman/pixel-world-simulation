@@ -32,7 +32,9 @@ export default class Engine {
 
   private worldSquareSide = 2;
 
-  private mousePosition = { x: 0, y: 0 } as Point;
+  private mousePosition: Point = { x: 0, y: 0 };
+
+  private lastMousePosition: Point = { x: 0, y: 0 };
 
   private lastUnitId = 0;
 
@@ -47,6 +49,8 @@ export default class Engine {
   private gameMaxCountMaterials = 9;
 
   private ui = new UI({});
+
+  private eventsStack: Array<() => void> = [];
 
   // gameWorld = new Uint32Array(4);
 
@@ -90,7 +94,7 @@ export default class Engine {
       'switch-create-wood-wall': () => { this.unitCreationType = 9; },
       'switch-remove': () => { this.unitCreationType = 5; },
       'switch-ignite': () => { this.unitCreationType = 7; },
-      'default-action': () => this.mainAction(),
+      'default-action': (mousePosition: Point) => this.mainAction(mousePosition),
     };
 
     this.ui = new UI(actions);
@@ -120,12 +124,14 @@ export default class Engine {
   setFramePosition(x: number, y: number) {
     this.framePositionX = x;
     this.framePositionY = y;
-    console.error(this.framePositionX, this.framePositionY);
+
+    this.ui.setFramePosition({ x, y });
   }
 
   setMousedPosition(point: Point) {
+    this.lastMousePosition = this.mousePosition;
     this.mousePosition = point;
-    this.ui.setMousedPosition({ x: point.x - this.framePositionX, y: point.y - this.framePositionY });
+    this.ui.setMousePosition(point);
   }
 
   setRendererSize(width: number, height: number) {
@@ -136,6 +142,11 @@ export default class Engine {
   }
 
   extractFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
+    this.eventsStack.push(...this.ui.collectActions());
+
+    this.eventsStack.forEach((el) => el());
+    this.eventsStack = [];
+
     const uiState = this.ui.extractFrame();
 
     const frame = new Uint32Array(frameWidth * frameHeight);
@@ -176,15 +187,51 @@ export default class Engine {
     return frame;
   }
 
-  handleMouseLeftButton(mousePosition: Point) {
+  handleMouseLeftButtonDown(mousePosition: Point) {
+    this.ui.handleClickDown(mousePosition);
+    this.lastMousePosition = this.mousePosition;
     this.mousePosition = mousePosition;
-    this.ui.handleClick(
-      { x: mousePosition.x - this.framePositionX, y: mousePosition.y - this.framePositionY },
-    );
   }
 
-  mainAction() {
-    this.createUnitAtPoint(this.mousePosition, this.unitCreationType, this.unitCreationSquareSize);
+  handleMouseLeftButtonUp(mousePosition: Point) {
+    this.ui.handleClickUp(mousePosition);
+    this.lastMousePosition = this.mousePosition;
+    this.mousePosition = mousePosition;
+  }
+
+  mainAction(mousePosition: Point) {
+    const createWrapper = (point: Point) => this.createUnitAtPoint(
+      point,
+      this.unitCreationType,
+      this.unitCreationSquareSize,
+    );
+    this.drawLine(this.lastMousePosition, mousePosition, createWrapper);
+    // this.createUnitAtPoint(mousePosition, this.unitCreationType, this.unitCreationSquareSize);
+  }
+
+  drawLine(startPoint: Point, endPoint: Point, callback: (p: Point) => void = () => {}) {
+    const resultArray: Array<Point> = [];
+    let newX = startPoint.x;
+    let newY = startPoint.y;
+
+    const x1 = endPoint.x;
+    const y1 = endPoint.y;
+
+    const dx = Math.abs(x1 - newX);
+    const dy = Math.abs(y1 - newY);
+    const sx = (newX < x1) ? 1 : -1;
+    const sy = (newY < y1) ? 1 : -1;
+    let err = dx - dy;
+
+    do {
+      callback({ x: newX, y: newY });
+      resultArray.push({ x: newX, y: newY });
+
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; newX += sx; }
+      if (e2 < dx) { err += dx; newY += sy; }
+    } while (!((newX === x1) && (newY === y1)));
+    return resultArray;
   }
 
   handleMouseWheelUp() {

@@ -35,7 +35,7 @@ export class App {
       appEl.appendChild(this.canvas);
     }
 
-    const handleMouseLeftButton = (mPos: Point) => this.engine.handleMouseLeftButton(mPos);
+    // const handleMouseLeftButton = (mPos: Point) => this.engine.handleMouseLeftButton(mPos);
     const handleMouseWheelUp = () => this.engine.handleMouseWheelUp();
     const handleMouseWheelDown = () => this.engine.handleMouseWheelDown();
     const handleMouseMiddleButton = () => this.engine.handleMouseMiddleButton();
@@ -101,44 +101,48 @@ export class App {
       false,
     );
 
-    const clickAndHold = (btnEl: HTMLCanvasElement, func: () => void) => {
-      let timerId: number;
-      const DURATION = 1;
+    // const clickAndHold = (btnEl: HTMLCanvasElement, func: () => void) => {
+    //   let timerId: number;
+    //   const DURATION = 1;
 
-      const onMouseDown = (e: MouseEvent | TouchEvent) => {
-        if (e.type === 'mousedown' && e instanceof MouseEvent) {
-          if (e.button === 0) {
-            timerId = window.setInterval(func, DURATION);
-          }
-        } else if (e instanceof TouchEvent) {
-          const touchPos = getTouchPos(this.canvas, e);
-          setCursorPos(touchPos);
-          timerId = window.setInterval(func, DURATION);
-        }
-      };
+    //   const onMouseDown = (e: MouseEvent | TouchEvent) => {
+    //     if (e.type === 'mousedown' && e instanceof MouseEvent) {
+    //       if (e.button === 0) {
+    //         timerId = window.setInterval(func, DURATION);
+    //       }
+    //     } else if (e instanceof TouchEvent) {
+    //       const touchPos = getTouchPos(this.canvas, e);
+    //       setCursorPos(touchPos);
+    //       timerId = window.setInterval(func, DURATION);
+    //     }
+    //   };
 
-      const clearTimer = () => {
-        if (timerId) {
-          window.clearInterval(timerId);
-        }
-      };
+    //   const clearTimer = () => {
+    //     if (timerId) {
+    //       window.clearInterval(timerId);
+    //     }
+    //   };
 
-      btnEl.addEventListener('mousedown', onMouseDown);
-      btnEl.addEventListener('mouseup', clearTimer);
-      btnEl.addEventListener('mouseout', clearTimer);
-      btnEl.addEventListener('touchstart', onMouseDown);
-      btnEl.addEventListener('touchend', clearTimer);
+    //   btnEl.addEventListener('mousedown', onMouseDown);
+    //   btnEl.addEventListener('mouseup', clearTimer);
+    //   btnEl.addEventListener('mouseout', clearTimer);
+    //   btnEl.addEventListener('touchstart', onMouseDown);
+    //   btnEl.addEventListener('touchend', clearTimer);
 
-      return () => {
-        btnEl.removeEventListener('mousedown', onMouseDown);
-        btnEl.removeEventListener('mouseup', clearTimer);
-        btnEl.removeEventListener('mouseout', clearTimer);
-        btnEl.addEventListener('touchstart', onMouseDown, false);
-        btnEl.addEventListener('touchend', clearTimer, false);
-      };
-    };
+    //   return () => {
+    //     btnEl.removeEventListener('mousedown', onMouseDown);
+    //     btnEl.removeEventListener('mouseup', clearTimer);
+    //     btnEl.removeEventListener('mouseout', clearTimer);
+    //     btnEl.addEventListener('touchstart', onMouseDown, false);
+    //     btnEl.addEventListener('touchend', clearTimer, false);
+    //   };
+    // };
 
-    clickAndHold(this.canvas, () => handleMouseLeftButton(this.virtualMousePosition));
+    // clickAndHold(this.canvas, () => handleMouseLeftButton(this.virtualMousePosition));
+
+    this.canvas.addEventListener('mousedown', () => this.engine.handleMouseLeftButtonDown(this.virtualMousePosition));
+
+    this.canvas.addEventListener('mouseup', () => this.engine.handleMouseLeftButtonUp(this.virtualMousePosition));
 
     this.canvas.addEventListener(
       'mousedown',
