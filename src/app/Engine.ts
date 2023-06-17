@@ -5,6 +5,7 @@ import { UI } from './UI';
 import Unit, { UnitShorthand } from './Unit';
 import { UnitState } from './UnitState';
 import { mixColors } from './utils';
+import Vector from './Vector';
 
 interface IWorldStateSave {
   [key: number]: { [key: number]: UnitShorthand };
@@ -394,14 +395,16 @@ export default class Engine {
 
             const state = {
               unitHealth: u.s.h,
-              unitIsOnFire: u.s.f,
+              unitIsOnFire: Boolean(u.s.f),
               unitColor: u.s.c,
               unitDecalColor: u.s.d,
               flameSustainability: u.s.s,
               fireHP: u.s.j,
             } as UnitState;
 
-            const unit = new Unit(u.n, null, u.i, state);
+            const vector = u.v ? { startPoint: u.v.s, endPoint: u.v.e } as Vector : null;
+
+            const unit = new Unit(u.n, vector, u.i, state);
             newWorldState[parseInt(keyX, 10)][parseInt(keyY, 10)] = unit;
           }
         });

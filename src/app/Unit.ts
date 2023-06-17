@@ -12,7 +12,7 @@ export interface VectorShorthand {
 
 export interface UnitStateShorthand {
   h: number; // unitHealth
-  f: boolean; // unitIsOnFire
+  f: number; // unitIsOnFire
   c: number; // unitColor
   d: number; // unitDecalColor
   s: number; // flameSustainability
@@ -22,7 +22,7 @@ export interface UnitStateShorthand {
 export interface UnitShorthand {
   n: string; // unitTypeName
   i: number; // unitId
-  v: VectorShorthand | null; // unitVelocityVector
+  v?: VectorShorthand; // unitVelocityVector
   s: UnitStateShorthand; // unitState
 }
 export default class Unit {
@@ -77,18 +77,26 @@ export default class Unit {
   toJson() {
     const stateShorthand = {
       h: this.unitState.unitHealth,
-      f: this.unitState.unitIsOnFire,
+      f: Number(this.unitState.unitIsOnFire),
       c: this.unitState.unitColor,
       d: this.unitState.unitDecalColor,
       s: this.unitState.flameSustainability,
       j: this.unitState.fireHP,
     };
 
-    return {
+    const unit = {
       n: this.unitTypeName,
       i: this.unitId,
-      v: this.unitVelocityVector,
       s: stateShorthand,
     } as UnitShorthand;
+
+    if (this.unitVelocityVector) {
+      unit.v = {
+        s: this.unitVelocityVector.startPoint,
+        e: this.unitVelocityVector.endPoint,
+      } as VectorShorthand;
+    }
+
+    return unit;
   }
 }
