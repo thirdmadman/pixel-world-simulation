@@ -1,9 +1,30 @@
 /* eslint-disable no-bitwise */
+import Point from './Point';
 import { UnitState } from './UnitState';
 import { getUnitTypeByUnitTypeName } from './UnitTypes';
 import { getRandomInt } from './utils';
 import Vector from './Vector';
 
+export interface VectorShorthand {
+  s: Point; // startPoint
+  e: Point; // endPoint
+}
+
+export interface UnitStateShorthand {
+  h: number; // unitHealth
+  f: boolean; // unitIsOnFire
+  c: number; // unitColor
+  d: number; // unitDecalColor
+  s: number; // flameSustainability
+  j: number; // fireHP
+}
+
+export interface UnitShorthand {
+  n: string; // unitTypeName
+  i: number; // unitId
+  v: VectorShorthand | null; // unitVelocityVector
+  s: UnitStateShorthand; // unitState
+}
 export default class Unit {
   unitTypeName: string;
 
@@ -51,5 +72,23 @@ export default class Unit {
 
   getUnitType() {
     return getUnitTypeByUnitTypeName(this.unitTypeName);
+  }
+
+  toJson() {
+    const stateShorthand = {
+      h: this.unitState.unitHealth,
+      f: this.unitState.unitIsOnFire,
+      c: this.unitState.unitColor,
+      d: this.unitState.unitDecalColor,
+      s: this.unitState.flameSustainability,
+      j: this.unitState.fireHP,
+    };
+
+    return {
+      n: this.unitTypeName,
+      i: this.unitId,
+      v: this.unitVelocityVector,
+      s: stateShorthand,
+    } as UnitShorthand;
   }
 }

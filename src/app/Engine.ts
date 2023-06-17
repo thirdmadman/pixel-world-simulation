@@ -2,11 +2,12 @@
 import PhysicEngine from './PhysicEngine';
 import Point from './Point';
 import { UI } from './UI';
-import Unit from './Unit';
+import Unit, { UnitShorthand } from './Unit';
+import { UnitState } from './UnitState';
 import { mixColors } from './utils';
 
 interface IWorldStateSave {
-  [key: number]: { [key: number]: Unit };
+  [key: number]: { [key: number]: UnitShorthand };
 }
 
 interface ISaveFile {
@@ -361,7 +362,7 @@ export default class Engine {
           if (!worldObj[x]) {
             worldObj[x] = {};
           }
-          worldObj[x][y] = this.gameWorldState[x][y] as Unit;
+          worldObj[x][y] = this.gameWorldState[x][y]?.toJson() as UnitShorthand;
         }
       }
     }
@@ -390,7 +391,17 @@ export default class Engine {
         Object.keys(save[parseInt(keyX, 10)]).forEach((keyY) => {
           if (save[parseInt(keyX, 10)][parseInt(keyY, 10)]) {
             const u = save[parseInt(keyX, 10)][parseInt(keyY, 10)];
-            const unit = new Unit(u.unitTypeName, null, u.unitId, u.unitState);
+
+            const state = {
+              unitHealth: u.s.h,
+              unitIsOnFire: u.s.f,
+              unitColor: u.s.c,
+              unitDecalColor: u.s.d,
+              flameSustainability: u.s.s,
+              fireHP: u.s.j,
+            } as UnitState;
+
+            const unit = new Unit(u.n, null, u.i, state);
             newWorldState[parseInt(keyX, 10)][parseInt(keyY, 10)] = unit;
           }
         });
