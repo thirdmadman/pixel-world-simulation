@@ -1,46 +1,31 @@
 /* eslint-disable no-bitwise */
-import Point from './Point';
-import { UnitState } from './UnitState';
-import { getUnitTypeByUnitTypeName } from './UnitTypes';
-import { getRandomInt } from './utils';
-import Vector from './Vector';
+import { IUnitState, IUnitStateShorthand } from '../interfaces/IUnitState';
+import { getUnitTypeByUnitTypeName } from '../data/UnitTypes';
+import { getRandomInt } from '../utils/utils';
+import { IVector, IVectorShorthand } from '../interfaces/IVector';
 
-export interface VectorShorthand {
-  s: Point; // startPoint
-  e: Point; // endPoint
-}
-
-export interface UnitStateShorthand {
-  h: number; // unitHealth
-  f: number; // unitIsOnFire
-  c: number; // unitColor
-  d: number; // unitDecalColor
-  s: number; // flameSustainability
-  j: number; // fireHP
-}
-
-export interface UnitShorthand {
+export interface IUnitShorthand {
   n: string; // unitTypeName
   i: number; // unitId
-  v?: VectorShorthand; // unitVelocityVector
-  s: UnitStateShorthand; // unitState
+  v?: IVectorShorthand; // unitVelocityVector
+  s: IUnitStateShorthand; // unitState
 }
-export default class Unit {
+export class Unit {
   unitTypeName: string;
 
   unitId: number;
 
-  unitVelocityVector: Vector | null;
+  unitVelocityVector: IVector | null;
 
   isUpdated = false;
 
-  unitState: UnitState;
+  unitState: IUnitState;
 
   constructor(
     unitTypeName: string,
-    unitForceVectorsArray: Vector | null = null,
+    unitForceVectorsArray: IVector | null = null,
     unitId = 0,
-    unitState: UnitState | null = null,
+    unitState: IUnitState | null = null,
   ) {
     this.unitTypeName = unitTypeName;
     this.unitVelocityVector = unitForceVectorsArray;
@@ -88,13 +73,13 @@ export default class Unit {
       n: this.unitTypeName,
       i: this.unitId,
       s: stateShorthand,
-    } as UnitShorthand;
+    } as IUnitShorthand;
 
     if (this.unitVelocityVector) {
       unit.v = {
         s: this.unitVelocityVector.startPoint,
         e: this.unitVelocityVector.endPoint,
-      } as VectorShorthand;
+      } as IVectorShorthand;
     }
 
     return unit;

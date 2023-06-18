@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import Unit from './Unit';
-import { getRandomInt } from './utils';
+
+import { Unit } from '../units/Unit';
+import { getRandomInt } from '../utils/utils';
 
 /* eslint-disable class-methods-use-this */
-export default class PhysicEngine {
+export class PhysicEngine {
   lastY = 0;
 
   isLineByLineResolve = false;

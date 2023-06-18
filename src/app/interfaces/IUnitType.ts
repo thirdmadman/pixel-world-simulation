@@ -1,7 +1,7 @@
-import { UnitDefaultColor } from './UnitDefaultColor';
-import { Transformations } from './Transformations';
+import { IUnitDefaultColor } from './IUnitDefaultColor';
+import { ITransformations } from './ITransformations';
 
-export default interface UnitType {
+export interface UnitType {
   unitName: string;
   unitDefaultHealth: number;
   unitDurability: number;
@@ -9,9 +9,9 @@ export default interface UnitType {
   unitIsFlammable: boolean;
   unitDefaultFlameSustainability: number;
   unitDefaultFireHP: number;
-  unitDefaultColor: UnitDefaultColor;
+  unitDefaultColor: IUnitDefaultColor;
   unitIsLiquid: boolean;
   unitIsStatic: boolean;
   unitDensity: number;
-  unitTransformations?: Transformations;
+  unitTransformations?: ITransformations;
 }

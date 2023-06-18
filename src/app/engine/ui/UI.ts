@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
-import Point from './Point';
-import { getUnitTypeByUnitTypeName } from './UnitTypes';
-import { getNotTransparent } from './utils';
+import { IPoint } from '../../interfaces/IPoint';
+import { getUnitTypeByUnitTypeName } from '../../data/UnitTypes';
+import { getNotTransparent } from '../../utils/utils';
 
 interface UIPixel {
   color: number;
@@ -9,7 +9,7 @@ interface UIPixel {
 }
 
 interface ActionsObject {
-  [propName: string]: (mousePosition: Point) => void;
+  [propName: string]: (mousePosition: IPoint) => void;
 }
 
 export class UI {
@@ -17,11 +17,11 @@ export class UI {
 
   private frameHeight = 1;
 
-  private mousePosition: Point = { x: 0, y: 0 };
+  private mousePosition: IPoint = { x: 0, y: 0 };
 
-  private mouseUIPosition: Point = { x: 0, y: 0 };
+  private mouseUIPosition: IPoint = { x: 0, y: 0 };
 
-  private framePosition: Point = { x: 0, y: 0 };
+  private framePosition: IPoint = { x: 0, y: 0 };
 
   private UIState: Array<Array<UIPixel | null>> = Array.from(Array(1), () => new Array<UIPixel>(1));
 
@@ -40,13 +40,13 @@ export class UI {
     this.frameHeight = height;
   }
 
-  setMousePosition(mousePosition: Point) {
+  setMousePosition(mousePosition: IPoint) {
     this.mousePosition = mousePosition;
     this.mouseUIPosition.x = mousePosition.x - this.framePosition.x;
     this.mouseUIPosition.y = mousePosition.y - this.framePosition.y;
   }
 
-  setFramePosition(framePosition: Point) {
+  setFramePosition(framePosition: IPoint) {
     this.framePosition = framePosition;
     this.mouseUIPosition.x = this.mousePosition.x - this.framePosition.x;
     this.mouseUIPosition.y = this.mousePosition.y - this.framePosition.y;
@@ -90,7 +90,7 @@ export class UI {
     }
   }
 
-  drawCreationMenu() {
+  drawCreationMenu(menuStartX: number, menuStartY: number) {
     const buttonsPixels: Array<UIPixel> = [
       {
         color: getNotTransparent(getUnitTypeByUnitTypeName('pure-water').unitDefaultColor.baseColor),
@@ -158,20 +158,20 @@ export class UI {
       });
     };
 
-    drawCreationMenuButtons(buttonsPixels, 160, 120, 4, 4);
+    drawCreationMenuButtons(buttonsPixels, menuStartX, menuStartY, 4, 4);
   }
 
   drawUI() {
-    this.drawCreationMenu();
+    this.drawCreationMenu(4, 120);
     this.drawCursor();
   }
 
-  handleClickDown(mousePosition: Point) {
+  handleClickDown(mousePosition: IPoint) {
     this.setMousePosition(mousePosition);
     this.isMouseDown = true;
   }
 
-  handleClickUp(mousePosition: Point) {
+  handleClickUp(mousePosition: IPoint) {
     this.setMousePosition(mousePosition);
     this.isMouseDown = false;
   }

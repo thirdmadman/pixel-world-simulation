@@ -1,4 +1,4 @@
-export interface Transformations {
+export interface ITransformations {
   toFreeze: string | null;
   toLiquid: string | null;
   toVapor: string | null;

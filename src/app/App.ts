@@ -1,6 +1,6 @@
-import Engine from './Engine';
-import Point from './Point';
-import { Renderer } from './Renderer';
+import { Engine } from './engine/Engine';
+import { IPoint } from './interfaces/IPoint';
+import { Renderer } from './render/Renderer';
 
 export class App {
   public renderer: Renderer;
@@ -21,9 +21,9 @@ export class App {
 
   private framePositionY = 0;
 
-  private realMousePosition = { x: 0, y: 0 } as Point;
+  private realMousePosition = { x: 0, y: 0 } as IPoint;
 
-  private virtualMousePosition = { x: 0, y: 0 } as Point;
+  private virtualMousePosition = { x: 0, y: 0 } as IPoint;
 
   private isPause = false;
 
@@ -46,7 +46,7 @@ export class App {
       return {
         x: (e.clientX - rect.left) * scaleX,
         y: (e.clientY - rect.top) * scaleY,
-      } as Point;
+      } as IPoint;
     };
 
     const getTouchPos = (canvas: HTMLCanvasElement, e: TouchEvent) => {
@@ -60,7 +60,7 @@ export class App {
       };
     };
 
-    const setCursorPos = (point: Point) => {
+    const setCursorPos = (point: IPoint) => {
       this.realMousePosition = point;
       const pixelSize = this.renderer.getPixelSize();
 

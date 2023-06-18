@@ -1,27 +1,15 @@
 /* eslint-disable class-methods-use-this */
-import PhysicEngine from './PhysicEngine';
-import Point from './Point';
-import { UI } from './UI';
-import Unit, { UnitShorthand } from './Unit';
-import { UnitState } from './UnitState';
-import { mixColors } from './utils';
-import Vector from './Vector';
+import { PhysicEngine } from './PhysicEngine';
+import { IPoint } from '../interfaces/IPoint';
+import { UI } from './ui/UI';
+import { Unit, IUnitShorthand } from '../units/Unit';
+import { IUnitState } from '../interfaces/IUnitState';
+import { mixColors } from '../utils/utils';
+import { IVector } from '../interfaces/IVector';
+import { IWorldStateSave } from '../interfaces/IWorldStateSave';
+import { ISaveFile } from '../interfaces/ISaveFile';
 
-interface IWorldStateSave {
-  [key: number]: { [key: number]: UnitShorthand };
-}
-
-interface ISaveFile {
-  frameWidth: number;
-  frameHeight: number;
-  framePositionX: number;
-  framePositionY: number;
-  worldSideSize: number;
-  lastUnitId: number;
-  worldSate: IWorldStateSave;
-}
-
-export default class Engine {
+export class Engine {
   private frameWidth = 0;
 
   private frameHeight = 0;
@@ -34,9 +22,9 @@ export default class Engine {
 
   private worldSquareSide = 2;
 
-  private mousePosition: Point = { x: 0, y: 0 };
+  private mousePosition: IPoint = { x: 0, y: 0 };
 
-  private lastMousePosition: Point = { x: 0, y: 0 };
+  private lastMousePosition: IPoint = { x: 0, y: 0 };
 
   private lastUnitId = 0;
 
@@ -96,7 +84,7 @@ export default class Engine {
       'switch-create-wood-wall': () => { this.unitCreationType = 9; },
       'switch-remove': () => { this.unitCreationType = 5; },
       'switch-ignite': () => { this.unitCreationType = 7; },
-      'default-action': (mousePosition: Point) => this.mainAction(mousePosition),
+      'default-action': (mousePosition: IPoint) => this.mainAction(mousePosition),
     };
 
     this.ui = new UI(actions);
@@ -130,7 +118,7 @@ export default class Engine {
     this.ui.setFramePosition({ x, y });
   }
 
-  setMousedPosition(point: Point) {
+  setMousedPosition(point: IPoint) {
     this.lastMousePosition = this.mousePosition;
     this.mousePosition = point;
     this.ui.setMousePosition(point);
@@ -189,20 +177,20 @@ export default class Engine {
     return frame;
   }
 
-  handleMouseLeftButtonDown(mousePosition: Point) {
+  handleMouseLeftButtonDown(mousePosition: IPoint) {
     this.ui.handleClickDown(mousePosition);
     this.lastMousePosition = this.mousePosition;
     this.mousePosition = mousePosition;
   }
 
-  handleMouseLeftButtonUp(mousePosition: Point) {
+  handleMouseLeftButtonUp(mousePosition: IPoint) {
     this.ui.handleClickUp(mousePosition);
     this.lastMousePosition = this.mousePosition;
     this.mousePosition = mousePosition;
   }
 
-  mainAction(mousePosition: Point) {
-    const createWrapper = (point: Point) => this.createUnitAtPoint(
+  mainAction(mousePosition: IPoint) {
+    const createWrapper = (point: IPoint) => this.createUnitAtPoint(
       point,
       this.unitCreationType,
       this.unitCreationSquareSize,
@@ -211,8 +199,8 @@ export default class Engine {
     // this.createUnitAtPoint(mousePosition, this.unitCreationType, this.unitCreationSquareSize);
   }
 
-  drawLine(startPoint: Point, endPoint: Point, callback: (p: Point) => void = () => {}) {
-    const resultArray: Array<Point> = [];
+  drawLine(startPoint: IPoint, endPoint: IPoint, callback: (p: IPoint) => void = () => {}) {
+    const resultArray: Array<IPoint> = [];
     let newX = startPoint.x;
     let newY = startPoint.y;
 
@@ -256,7 +244,7 @@ export default class Engine {
     }
   }
 
-  createUnitAtPoint(mousePosition: Point, unitType: number, squareSize: number) {
+  createUnitAtPoint(mousePosition: IPoint, unitType: number, squareSize: number) {
     const generateNewUnit = () => {
       let unitTypeName = 'pure-water';
       switch (unitType) {
@@ -363,7 +351,7 @@ export default class Engine {
           if (!worldObj[x]) {
             worldObj[x] = {};
           }
-          worldObj[x][y] = this.gameWorldState[x][y]?.toJson() as UnitShorthand;
+          worldObj[x][y] = this.gameWorldState[x][y]?.toJson() as IUnitShorthand;
         }
       }
     }
@@ -400,9 +388,9 @@ export default class Engine {
               unitDecalColor: u.s.d,
               flameSustainability: u.s.s,
               fireHP: u.s.j,
-            } as UnitState;
+            } as IUnitState;
 
-            const vector = u.v ? { startPoint: u.v.s, endPoint: u.v.e } as Vector : null;
+            const vector = u.v ? { startPoint: u.v.s, endPoint: u.v.e } as IVector : null;
 
             const unit = new Unit(u.n, vector, u.i, state);
             newWorldState[parseInt(keyX, 10)][parseInt(keyY, 10)] = unit;

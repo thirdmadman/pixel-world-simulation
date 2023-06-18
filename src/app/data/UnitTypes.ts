@@ -1,4 +1,4 @@
-import UnitType from './UnitType';
+import { UnitType } from '../interfaces/IUnitType';
 
 interface IUnitTypesStringsToIndex {
   [propName: string]: number;

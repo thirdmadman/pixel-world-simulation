@@ -1,4 +1,4 @@
-export interface UnitDefaultColor {
+export interface IUnitDefaultColor {
   baseColor: number;
   minRandomColor: number;
   maxRandomColor: number;
