@@ -2,12 +2,10 @@
 import { PhysicEngine } from './PhysicEngine';
 import { IPoint } from '../interfaces/IPoint';
 import { UI } from './ui/UI';
-import { Unit, IUnitShorthand } from '../models/Unit';
-import { IUnitState } from '../interfaces/IUnitState';
+import { Unit } from '../models/Unit';
 import { mixColors } from '../utils/utils';
-import { IVector } from '../interfaces/IVector';
-import { IWorldStateSave } from '../interfaces/IWorldStateSave';
-import { ISaveFile } from '../interfaces/ISaveFile';
+import { WorldState } from '../interfaces/WorldState';
+import { IGameState } from '../interfaces/IGameState';
 
 export class Engine {
   private frameWidth = 0;
@@ -28,8 +26,6 @@ export class Engine {
 
   private lastUnitId = 0;
 
-  private save = '';
-
   private isPhysicsEnginePause = false;
 
   private unitCreationType = 0;
@@ -42,36 +38,26 @@ export class Engine {
 
   private eventsStack: Array<() => void> = [];
 
-  // gameWorld = new Uint32Array(4);
+  private gameWorldState: WorldState = Array.from(Array(4), () => new Array<Unit | null>(4));
 
-  // 0x 01  02  33  44
-  // 01 This is the type of unit
-  // 02
-  // 33
-  // 44
+  constructor(worldSquareSide: number, engineState: IGameState | null = null) {
+    if (engineState) {
+      this.setEngineState(engineState);
+    } else {
+      this.worldSquareSide = worldSquareSide;
 
-  // Unit types
-  // 0x 01  0 1 2 3 4 5
-  // 01 This is number of the type of unit
-  // 02 this is health of the unit
-  //
+      const nodes = new Array(worldSquareSide);
+      const copy = new Array(worldSquareSide);
+      for (let i = 0; i < worldSquareSide; i++) {
+        copy[i] = null;
+      }
 
-  gameWorldState: Array<Array<Unit | null>> = Array.from(Array(4), () => new Array<Unit | null>(4));
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i] = copy.slice(0);
+      }
 
-  constructor(worldSquareSide: number) {
-    this.worldSquareSide = worldSquareSide;
-
-    const nodes = new Array(worldSquareSide);
-    const copy = new Array(worldSquareSide);
-    for (let i = 0; i < worldSquareSide; i++) {
-      copy[i] = null;
+      this.gameWorldState = nodes as WorldState;
     }
-
-    for (let i = 0; i < nodes.length; i++) {
-      nodes[i] = copy.slice(0);
-    }
-
-    this.gameWorldState = nodes as Array<Array<Unit | null>>;
 
     const actions = {
       'switch-create-pure-water': () => { this.unitCreationType = 0; },
@@ -105,6 +91,34 @@ export class Engine {
     //   unitIsStatic: true,
     //   unitColor: 0xff000000,
     // }, []));
+  }
+
+  setEngineState(engineState: IGameState | null) {
+    if (!engineState) return;
+
+    this.frameWidth = engineState.frameWidth;
+    this.frameHeight = engineState.frameHeight;
+    this.framePositionX = engineState.framePositionX;
+    this.framePositionY = engineState.framePositionY;
+    this.worldSquareSide = engineState.worldSquareSide;
+    this.mousePosition = engineState.mousePosition;
+    this.lastMousePosition = engineState.lastMousePosition;
+    this.lastUnitId = 0;
+    this.gameWorldState = engineState.gameWorldState;
+  }
+
+  getEngineState() {
+    return {
+      frameWidth: this.frameHeight,
+      frameHeight: this.frameHeight,
+      framePositionX: this.framePositionX,
+      framePositionY: this.framePositionY,
+      worldSquareSide: this.worldSquareSide,
+      mousePosition: this.mousePosition,
+      lastMousePosition: this.lastMousePosition,
+      lastUnitId: this.lastUnitId,
+      gameWorldState: this.gameWorldState,
+    } as IGameState;
   }
 
   setPause(isPause: boolean) {
@@ -341,92 +355,5 @@ export class Engine {
       this.gameWorldState = this.physicEngine.resolveWorld(this.gameWorldState, this.worldSquareSide);
     }
     return this.extractFrame(frameWidth, frameHeight, framePositionX, framePositionY);
-  }
-
-  convertWorldStateToSave() {
-    const worldObj = {} as IWorldStateSave;
-    for (let x = 0; x < this.worldSquareSide; x += 1) {
-      for (let y = 0; y < this.worldSquareSide; y += 1) {
-        if (this.gameWorldState[x][y] != null) {
-          if (!worldObj[x]) {
-            worldObj[x] = {};
-          }
-          worldObj[x][y] = this.gameWorldState[x][y]?.toJson() as IUnitShorthand;
-        }
-      }
-    }
-    return worldObj;
-  }
-
-  serializeToSaveFile() {
-    const saveObject = {
-      frameWidth: this.frameWidth,
-      frameHeight: this.frameHeight,
-      framePositionX: this.framePositionX,
-      framePositionY: this.framePositionY,
-      worldSideSize: this.worldSquareSide,
-      lastUnitId: this.lastUnitId,
-      worldSate: this.convertWorldStateToSave(),
-    };
-    console.error(saveObject);
-    this.save = JSON.stringify(saveObject);
-    return JSON.stringify(saveObject);
-  }
-
-  convertSaveToWorldState(save: IWorldStateSave, worldSquareSide: number) {
-    const newWorldState = Array.from(Array(worldSquareSide), () => new Array<Unit>(worldSquareSide));
-    Object.keys(save).forEach((keyX) => {
-      if (save[parseInt(keyX, 10)]) {
-        Object.keys(save[parseInt(keyX, 10)]).forEach((keyY) => {
-          if (save[parseInt(keyX, 10)][parseInt(keyY, 10)]) {
-            const u = save[parseInt(keyX, 10)][parseInt(keyY, 10)];
-
-            const state = {
-              unitHealth: u.s.h,
-              unitIsOnFire: Boolean(u.s.f),
-              unitColor: u.s.c,
-              unitDecalColor: u.s.d,
-              flameSustainability: u.s.s,
-              fireHP: u.s.j,
-            } as IUnitState;
-
-            const vector = u.v ? { startPoint: u.v.s, endPoint: u.v.e } as IVector : null;
-
-            const unit = new Unit(u.n, vector, u.i, state);
-            newWorldState[parseInt(keyX, 10)][parseInt(keyY, 10)] = unit;
-          }
-        });
-      }
-    });
-    return newWorldState;
-  }
-
-  deserializeAnLoadFromFile(file: string = this.save) {
-    const saveObject = JSON.parse(file) as ISaveFile;
-    if (file && file[0] === '{') {
-      const saveObjectKeysNumber = Object.keys(saveObject).length;
-      if (saveObject && saveObjectKeysNumber > 0) {
-        if (saveObject.worldSate) {
-          this.frameWidth = saveObject.frameWidth;
-          this.frameHeight = saveObject.frameHeight;
-          this.framePositionX = saveObject.framePositionX;
-          this.framePositionY = saveObject.framePositionY;
-          this.worldSquareSide = saveObject.worldSideSize;
-          this.lastUnitId = saveObject.lastUnitId;
-          this.gameWorldState = this.convertSaveToWorldState(saveObject.worldSate, saveObject.worldSideSize);
-        }
-      }
-    }
-  }
-
-  saveToLocalStorage() {
-    localStorage.setItem('pws-save', this.serializeToSaveFile());
-  }
-
-  loadFromLocalStorage() {
-    const src = localStorage.getItem('pws-save');
-    if (src) {
-      this.deserializeAnLoadFromFile(src);
-    }
   }
 }

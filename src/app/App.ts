@@ -1,3 +1,4 @@
+import { DataStorage } from './engine/DataStorage';
 import { Engine } from './engine/Engine';
 import { IPoint } from './interfaces/IPoint';
 import { Renderer } from './render/Renderer';
@@ -26,6 +27,8 @@ export class App {
   private virtualMousePosition = { x: 0, y: 0 } as IPoint;
 
   private isPause = false;
+
+  private dataStorage = new DataStorage();
 
   constructor() {
     this.canvas.classList.add('canvas-renderer');
@@ -196,10 +199,12 @@ export class App {
         this.engine.setPause(this.isPause);
       }
       if (event.key === 's') {
-        this.engine.saveToLocalStorage();
+        const engineState = this.engine.getEngineState();
+        this.dataStorage.saveToLocalStorage(engineState);
       }
       if (event.key === 'l') {
-        this.engine.loadFromLocalStorage();
+        const engineState = this.dataStorage.loadFromLocalStorage();
+        this.engine.setEngineState(engineState);
       }
     });
 
