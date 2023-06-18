@@ -59,7 +59,7 @@ export class PhysicEngine {
 
       const dir = isLiquid ? -1 : 1;
 
-      if (y > 0) {
+      if (y >= 0) {
         if (displaceLine(1 * dir)) {
           return true;
         }
