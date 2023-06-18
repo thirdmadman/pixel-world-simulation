@@ -2,7 +2,7 @@
 import { PhysicEngine } from './PhysicEngine';
 import { IPoint } from '../interfaces/IPoint';
 import { UI } from './ui/UI';
-import { Unit, IUnitShorthand } from '../units/Unit';
+import { Unit, IUnitShorthand } from '../models/Unit';
 import { IUnitState } from '../interfaces/IUnitState';
 import { mixColors } from '../utils/utils';
 import { IVector } from '../interfaces/IVector';

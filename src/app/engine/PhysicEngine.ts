@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { Unit } from '../units/Unit';
+import { Unit } from '../models/Unit';
 import { getRandomInt } from '../utils/utils';
 
 /* eslint-disable class-methods-use-this */
