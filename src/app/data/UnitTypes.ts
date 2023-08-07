@@ -151,18 +151,19 @@ export const UnitTypesArray = [
     unitName: 'yellow-flame',
     unitIsLiquid: false,
     unitIsStatic: false,
-    unitIsGas: true,
+    unitIsGas: false,
+    unitIsFlame: true,
     unitIsFlammable: false,
     unitDefaultFlameSustainability: 1,
-    unitDefaultFireHP: 3,
+    unitDefaultFireHP: 1,
     unitDefaultHealth: 3,
     unitDurability: 0,
     unitDensity: 0.00033,
     unitDefaultColor: {
-      minRandomColor: 0x0a,
-      maxRandomColor: 0x35,
-      colorShiftNumbers: 0xfff,
-      baseColor: 0x0060ff + 0x7f000000, // ff6000
+      minRandomColor: 0x00,
+      maxRandomColor: 0x00,
+      colorShiftNumbers: 0x000,
+      baseColor: 0x0060ff + 0xff000000, // ff6000
     },
     unitTransformations: {
       toFreeze: null,
