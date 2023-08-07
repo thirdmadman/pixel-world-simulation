@@ -33,7 +33,9 @@ export class Unit {
 
     if (!unitState) {
       const defaultType = getUnitTypeByUnitTypeName(unitTypeName);
-      const { unitDefaultColor } = defaultType;
+      const {
+        unitDefaultColor, unitDefaultHealth, unitDefaultFlameSustainability, unitDefaultFireHP,
+      } = defaultType;
 
       const randColor = getRandomInt(unitDefaultColor.minRandomColor, unitDefaultColor.maxRandomColor);
       const r = ((unitDefaultColor.colorShiftNumbers & 0x00f) >> 3);
@@ -43,12 +45,12 @@ export class Unit {
       const unitColor = unitDefaultColor.baseColor + resColor;
 
       this.unitState = {
-        unitHealth: defaultType.unitDefaultHealth,
+        unitHealth: unitDefaultHealth,
         unitIsOnFire: false,
         unitColor,
         unitDecalColor: 0,
-        flameSustainability: defaultType.unitDefaultFlameSustainability,
-        fireHP: defaultType.unitDefaultFireHP,
+        flameSustainability: unitDefaultFlameSustainability,
+        fireHP: unitDefaultFireHP,
       };
     } else {
       this.unitState = unitState;
