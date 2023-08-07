@@ -1,5 +1,7 @@
+import { IUnitState } from '../interfaces/IUnitState';
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
+import { IVector } from '../interfaces/IVector';
 import { Unit } from '../models/Unit';
 import { getRandomInt } from '../utils/utils';
 
@@ -9,7 +11,15 @@ export class PhysicEngine {
 
   isLineByLineResolve = false;
 
-  resolveWorld(currentWorld: Array<Array<Unit | null>>, worldSideSize: number) {
+  lastUnitId = 0;
+
+  private emitters: Array<() => void> = [];
+
+  resolveWorld(
+    currentWorld: Array<Array<Unit | null>>,
+    worldSideSize: number,
+    createUnit: (unitType: string, unitVector: IVector | null, state: IUnitState | null) => Unit,
+  ) {
     // const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
 
     // const testForCopies = (x: number, y: number) => {
@@ -325,7 +335,7 @@ export class PhysicEngine {
       return false;
     };
 
-    const processFire = (x: number, y: number) => {
+    const processUnitOnFire = (x: number, y: number) => {
       const minRandomColor = 0x00;
       const maxRandomColor = 0xe9;
       const baseColor = 0x0000ff + 0xff000000; // b55a00
@@ -369,34 +379,82 @@ export class PhysicEngine {
       setOnFireNeighbor(x, y - 1);
     };
 
-    const processUnit = (x: number, y: number) => {
+    const emitFlameFromUnit = (x: number, y: number) => {
+      if (y < worldSideSize && !currentWorld[x][y + 1]) {
+        const unit = createUnit('yellow-flame', null, null);
+        currentWorld[x][y + 1] = unit;
+        unit.isUpdated = true;
+      }
+    };
+
+    const elevateFlame = (x: number, y: number) => {
+      if (y + 1 > worldSideSize) return false;
+
+      if (!currentWorld[x][y + 1]) {
+        if (Math.random() >= 0.1) {
+          currentWorld[x][y]!.unitState.unitHealth -= 1;
+        }
+        replaceUnit(x, y, x, y + 1);
+        return true;
+      }
+      console.log(currentWorld[x][y + 1]?.getUnitType().unitIsFlame);
+      if (currentWorld[x][y + 1]?.getUnitType().unitIsFlame) {
+        const res = elevateFlame(x, y + 1);
+        if (res) {
+          if (Math.random() >= 0.5) {
+            currentWorld[x][y]!.unitState.unitHealth -= 1;
+          }
+          replaceUnit(x, y, x, y + 1);
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    const processFlame = (x: number, y: number) => {
+      if (Math.random() >= 0.8) {
+        currentWorld[x][y]!.unitState.unitHealth -= 1;
+      }
+      elevateFlame(x, y);
+    };
+
+    const processNotStaticUnit = (x: number, y: number) => {
       if (!currentWorld[x][y]?.isUpdated) {
         if (currentWorld[x][y]?.getUnitType().unitIsGas) {
           processGas(x, y);
         } else if (currentWorld[x][y]?.getUnitType().unitIsLiquid) {
           processWater(x, y);
+        } else if (currentWorld[x][y]?.getUnitType().unitIsFlame) {
+          processFlame(x, y);
         } else {
           processPowder(x, y);
         }
       }
     };
 
-    const processUnits = (x: number, y: number) => {
+    const processUnit = (x: number, y: number) => {
       if (currentWorld[x][y] != null) {
-        if (!currentWorld[x][y]?.getUnitType().unitIsStatic) {
-          processUnit(x, y);
-        }
-        if (currentWorld[x][y]?.unitState.unitIsOnFire) {
-          processFire(x, y);
-        }
         if (currentWorld[x][y] && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.unitHealth <= 0) {
           currentWorld[x][y] = null;
+          return;
         }
+
         if (
           currentWorld[x][y] && currentWorld[x][y]?.getUnitType().unitIsFlammable
           && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.fireHP <= 0
         ) {
           currentWorld[x][y] = null;
+          return;
+        }
+
+        if (currentWorld[x][y]?.unitState.unitIsOnFire) {
+          processUnitOnFire(x, y);
+          this.emitters.push(() => emitFlameFromUnit(x, y));
+        }
+
+        if (!currentWorld[x][y]?.getUnitType().unitIsStatic) {
+          processNotStaticUnit(x, y);
         }
       }
     };
@@ -416,11 +474,11 @@ export class PhysicEngine {
 
       if (dir === false) {
         for (let x = 0; x < worldSideSize; x += 1) {
-          processUnits(x, y);
+          processUnit(x, y);
         }
       } else {
         for (let x = worldSideSize - 1; x >= 0; x -= 1) {
-          processUnits(x, y);
+          processUnit(x, y);
         }
       }
     };
@@ -440,6 +498,11 @@ export class PhysicEngine {
         processLine(y);
       }
     }
+
+    for (let i = 0; i < this.emitters.length; i += 1) {
+      this.emitters[i]();
+    }
+    this.emitters = [];
 
     // for (let y = 0; y < worldSideSize; y += 1) {
     //   for (let x = 0; x < worldSideSize; x += 1) {

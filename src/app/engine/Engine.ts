@@ -6,6 +6,8 @@ import { Unit } from '../models/Unit';
 import { mixColors } from '../utils/utils';
 import { WorldState } from '../interfaces/WorldState';
 import { IGameState } from '../interfaces/IGameState';
+import { IVector } from '../interfaces/IVector';
+import { IUnitState } from '../interfaces/IUnitState';
 
 export class Engine {
   private frameWidth = 0;
@@ -258,6 +260,17 @@ export class Engine {
     }
   }
 
+  createUnit(unitType: string, unitVector: IVector | null, state: IUnitState | null) {
+    this.lastUnitId += 1;
+    const unit = new Unit(unitType, unitVector, this.lastUnitId);
+    if (state) {
+      const newState = { ...unit.unitState, ...state } as IUnitState;
+      unit.unitState = newState;
+    }
+
+    return unit;
+  }
+
   createUnitAtPoint(mousePosition: IPoint, unitType: number, squareSize: number) {
     const generateNewUnit = () => {
       let unitTypeName = 'pure-water';
@@ -352,7 +365,15 @@ export class Engine {
 
   requestFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
     if (!this.isPhysicsEnginePause) {
-      this.gameWorldState = this.physicEngine.resolveWorld(this.gameWorldState, this.worldSquareSide);
+      this.gameWorldState = this.physicEngine.resolveWorld(
+        this.gameWorldState,
+        this.worldSquareSide,
+        (
+          unitType: string,
+          unitVector: IVector | null,
+          unitState: IUnitState | null,
+        ) => this.createUnit(unitType, unitVector, unitState),
+      );
     }
     return this.extractFrame(frameWidth, frameHeight, framePositionX, framePositionY);
   }
