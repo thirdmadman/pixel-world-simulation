@@ -235,15 +235,15 @@ export class App {
 
   start() {
     if (!this.isStarted) {
-      const pixels = this.renderer.getPixels();
-      pixels.fill(0xff000000);
       this.isStarted = true;
-
       this.startRender();
     }
   }
 
   startRender() {
+    const pixels = this.renderer.getPixels();
+    this.renderer.setPixels(pixels.fill(0xff000000));
+
     const callRender = (time: number) => {
       this.renderer.setPixels(
         this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
