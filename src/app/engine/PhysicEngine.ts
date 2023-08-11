@@ -7,13 +7,13 @@ import { getRandomInt } from '../utils/utils';
 
 /* eslint-disable class-methods-use-this */
 export class PhysicEngine {
-  lastY = 0;
+  private lastY = 0;
 
-  isLineByLineResolve = false;
+  private isLineByLineResolve = false;
 
-  lastUnitId = 0;
+  private lastUnitId = 0;
 
-  private emitters: Array<() => void> = [];
+  private emittedUnits: Array<{ unitType: string, x: number, y: number }> = [];
 
   resolveWorld(
     currentWorld: Array<Array<Unit | null>>,
@@ -379,14 +379,6 @@ export class PhysicEngine {
       setOnFireNeighbor(x, y - 1);
     };
 
-    const emitFlameFromUnit = (x: number, y: number) => {
-      if (y < worldSideSize && !currentWorld[x][y + 1]) {
-        const unit = createUnit('yellow-flame', null, null);
-        currentWorld[x][y + 1] = unit;
-        unit.isUpdated = true;
-      }
-    };
-
     const elevateFlame = (x: number, y: number) => {
       if (y + 1 > worldSideSize) return false;
 
@@ -397,7 +389,6 @@ export class PhysicEngine {
         replaceUnit(x, y, x, y + 1);
         return true;
       }
-      console.log(currentWorld[x][y + 1]?.getUnitType().unitIsFlame);
       if (currentWorld[x][y + 1]?.getUnitType().unitIsFlame) {
         const res = elevateFlame(x, y + 1);
         if (res) {
@@ -436,7 +427,17 @@ export class PhysicEngine {
     const processUnit = (x: number, y: number) => {
       if (currentWorld[x][y] != null) {
         if (currentWorld[x][y] && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.unitHealth <= 0) {
+          const transformations = currentWorld[x][y]?.getUnitType().unitTransformations;
+
           currentWorld[x][y] = null;
+
+          if (!transformations || !transformations.toDestroy) {
+            return;
+          }
+
+          if (Math.random() >= 0.99) {
+            this.emittedUnits.push({ unitType: transformations.toDestroy, x, y });
+          }
           return;
         }
 
@@ -445,12 +446,19 @@ export class PhysicEngine {
           && currentWorld[x][y]?.unitState && currentWorld[x][y]!.unitState.fireHP <= 0
         ) {
           currentWorld[x][y] = null;
+
+          const transformations = currentWorld[x][y]?.getUnitType().unitTransformations;
+          if (!transformations || !transformations.toDestroy) {
+            return;
+          }
+
+          this.emittedUnits.push({ unitType: transformations.toDestroy, x, y });
           return;
         }
 
         if (currentWorld[x][y]?.unitState.unitIsOnFire) {
           processUnitOnFire(x, y);
-          this.emitters.push(() => emitFlameFromUnit(x, y));
+          this.emittedUnits.push({ unitType: 'yellow-flame', x, y: y + 1 });
         }
 
         if (!currentWorld[x][y]?.getUnitType().unitIsStatic) {
@@ -499,10 +507,13 @@ export class PhysicEngine {
       }
     }
 
-    for (let i = 0; i < this.emitters.length; i += 1) {
-      this.emitters[i]();
+    for (let i = 0; i < this.emittedUnits.length; i += 1) {
+      const { x, y, unitType } = this.emittedUnits[i];
+      if (currentWorld[x][y] === null) {
+        currentWorld[x][y] = createUnit(unitType, null, null);
+      }
     }
-    this.emitters = [];
+    this.emittedUnits = [];
 
     // for (let y = 0; y < worldSideSize; y += 1) {
     //   for (let x = 0; x < worldSideSize; x += 1) {
