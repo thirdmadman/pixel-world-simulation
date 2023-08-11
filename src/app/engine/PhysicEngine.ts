@@ -335,6 +335,36 @@ export class PhysicEngine {
       return false;
     };
 
+    const setOnFireNeighbor = (xNeighbor: number, yNeighbor: number) => {
+      if (!isInBounds(xNeighbor, yNeighbor)) {
+        return;
+      }
+
+      if (!currentWorld[xNeighbor][yNeighbor] || !currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitIsFlammable) {
+        return;
+      }
+
+      if (currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire) {
+        return;
+      }
+
+      // if (currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability <= 1) {
+      //   const random = getRandomInt(0, 1000);
+      //   const prob = (currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitDefaultFlameSustainability || 0);
+      //   if (random >= prob) {
+      //     currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
+      //   }
+      // } else {
+      //   currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability -= 1;
+      // }
+
+      const random = getRandomInt(0, 1000);
+      const prob = (currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitDefaultFlameSustainability || 0);
+      if (random >= prob) {
+        currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
+      }
+    };
+
     const processUnitOnFire = (x: number, y: number) => {
       const minRandomColor = 0x00;
       const maxRandomColor = 0xe9;
@@ -351,27 +381,6 @@ export class PhysicEngine {
 
       currentWorld[x][y]!.unitState.unitDecalColor = unitColor;
       currentWorld[x][y]!.unitState.fireHP -= 1;
-
-      const setOnFireNeighbor = (xNeighbor: number, yNeighbor: number) => {
-        if (!isInBounds(xNeighbor, yNeighbor)) {
-          return;
-        }
-
-        if (currentWorld[xNeighbor][yNeighbor] && currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitIsFlammable) {
-          if (currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire) {
-            return;
-          }
-          if (currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability <= 1) {
-            const random = getRandomInt(0, 1000);
-            const prob = 1000 - (currentWorld[xNeighbor][yNeighbor]?.getUnitType().unitDefaultFlameSustainability || 0);
-            if (random >= prob) {
-              currentWorld[xNeighbor][yNeighbor]!.unitState.unitIsOnFire = true;
-            }
-          } else {
-            currentWorld[xNeighbor][yNeighbor]!.unitState.flameSustainability -= 1;
-          }
-        }
-      };
 
       setOnFireNeighbor(x - 1, y);
       setOnFireNeighbor(x + 1, y);
