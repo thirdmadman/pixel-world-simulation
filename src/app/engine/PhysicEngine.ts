@@ -114,6 +114,11 @@ export class PhysicEngine {
         const isUpperDiagonalFree = isUpperLeftDiagonalFree && isUpperRightDiagonalFree;
         const isLeftAndRightFree = isLeftFree && isRightFree;
 
+        const isToDestroy = currentWorld[x][y]?.unitTypeName === 'gray-smoke'
+        && currentWorld[x][y + 1]?.getUnitType().unitIsStatic;
+
+        if (isToDestroy) currentWorld[x][y]!.unitState.unitHealth -= 1;
+
         if (isUpperEmpty) {
           replaceUnit(x, y, x, y + 1);
         } else if (isUpperDiagonalFree && isLeftAndRightFree) {
