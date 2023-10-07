@@ -4,6 +4,7 @@ import { ISaveFile } from '../interfaces/ISaveFile';
 import { IUnitState } from '../interfaces/IUnitState';
 import { IVector } from '../interfaces/IVector';
 import { IWorldStateSave } from '../interfaces/IWorldStateSave';
+import { WorldState } from '../interfaces/WorldState';
 import { IUnitShorthand, Unit } from '../models/Unit';
 
 export class DataStorage {
@@ -39,7 +40,18 @@ export class DataStorage {
   }
 
   convertSaveToWorldState(save: IWorldStateSave, worldSquareSide: number) {
-    const newWorldState = Array.from(Array(worldSquareSide), () => new Array<Unit>(worldSquareSide));
+    const nodes = new Array(worldSquareSide);
+    const copy = new Array(worldSquareSide);
+    for (let i = 0; i < worldSquareSide; i++) {
+      copy[i] = null;
+    }
+
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i] = copy.slice(0);
+    }
+
+    const newWorldState = nodes as WorldState;
+
     Object.keys(save).forEach((keyX) => {
       if (save[parseInt(keyX, 10)]) {
         Object.keys(save[parseInt(keyX, 10)]).forEach((keyY) => {
