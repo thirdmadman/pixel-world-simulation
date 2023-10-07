@@ -181,14 +181,14 @@ export const UnitTypesArray = [
     unitIsFlammable: false,
     unitDefaultFlameSustainability: 1,
     unitDefaultFireHP: 0,
-    unitDefaultHealth: 10,
+    unitDefaultHealth: 100,
     unitDurability: 0,
     unitDensity: 0.00061,
     unitDefaultColor: {
       minRandomColor: 0x0a,
-      maxRandomColor: 0x52,
+      maxRandomColor: 0x10,
       colorShiftNumbers: 0xfff,
-      baseColor: 0x818181 + 0x99000000,
+      baseColor: 0x818181 + 0x77000000,
     },
     unitTransformations: {
       toFreeze: null,
