@@ -28,7 +28,7 @@ export const mixColors = (colorA: number, colorB: number) => {
     alA: number,
     alB: number,
     rA: number,
-  ) => Math.round(((1 - alA) * alB * cB + alA * cA) / rA);
+  ) => Math.round(((1 - alA) * alB * cB + alA * cA) / rA) || 0;
 
   const rA = colorANoAlpha & 0xff;
   const gA = (colorANoAlpha & 0xff00) >> 8;
