@@ -70,23 +70,36 @@ export class Renderer {
   render(time: number) {
     const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
 
-    for (let row = 0; row < this.height / this.pixelSize; row++) {
-      for (let col = 0; col < this.width / this.pixelSize; col++) {
+    performance.mark('start');
+
+    const widthPixelsRatio = this.width / this.pixelSize;
+    const heightPixelsRatio = this.height / this.pixelSize;
+
+    for (let row = 0; row < heightPixelsRatio; row++) {
+      const rowPixelOffset = row * this.pixelSize;
+      for (let col = 0; col < widthPixelsRatio; col++) {
+        const colPixelOffset = col * this.pixelSize;
+
+        const virtualPixelIndex = toLinearArrayIndex(
+          col,
+          row,
+          widthPixelsRatio,
+          heightPixelsRatio,
+        );
+
+        const virtualPixel = this.virtualPixels[virtualPixelIndex];
+
         for (let realPixelX = 0; realPixelX < this.pixelSize; realPixelX++) {
+          const realPixelXConstant = colPixelOffset + realPixelX;
           for (let realPixelY = 0; realPixelY < this.pixelSize; realPixelY++) {
             const realPixelIndex = toLinearArrayIndex(
-              col * this.pixelSize + realPixelX,
-              row * this.pixelSize + realPixelY,
+              realPixelXConstant,
+              rowPixelOffset + realPixelY,
               this.width,
               this.height,
             );
-            const virtualPixelIndex = toLinearArrayIndex(
-              col,
-              row,
-              this.width / this.pixelSize,
-              this.height / this.pixelSize,
-            );
-            this.realPixels[realPixelIndex] = this.virtualPixels[virtualPixelIndex];
+
+            this.realPixels[realPixelIndex] = virtualPixel;
           }
         }
       }
@@ -94,13 +107,17 @@ export class Renderer {
 
     this.ctx.putImageData(this.imageData, 0, 0);
 
+    performance.mark('end');
+    const perf = performance.measure('Measurement', 'start', 'end');
+
     if (1000 / (performance.now() - this.lastFrameTime) === Infinity) {
       this.lastFrameTime = performance.now();
     }
 
     this.ctx.font = '10px serif';
     this.ctx.fillStyle = 'red';
-    this.ctx.fillText(`FPS: ${String(1000 / (performance.now() - this.lastFrameTime))}`, 0, 10);
+    this.ctx.fillText(`FPS: ${(String(1000 / (performance.now() - this.lastFrameTime)).slice(0, 6))}`, 0, 10);
+    this.ctx.fillText(`render: ${(String(perf.duration)).slice(0, 4)}`, 0, 30);
     this.lastFrameTime = performance.now();
   }
 
