@@ -1,3 +1,5 @@
+import { mixColors } from '../utils/utils';
+
 export class Renderer {
   private canvas: HTMLCanvasElement;
 
@@ -66,58 +68,86 @@ export class Renderer {
 
   getLastFrameTime = () => this.lastFrameTime;
 
+  blendPixelLayers(layers: Array<Array<Array<number>>>) {
+    if (!layers || layers.length === 0) return null;
+
+    if (!layers.every((el) => el.length === this.width)) {
+      return null;
+    }
+
+    if (layers.length === 1) {
+      return layers[0];
+    }
+
+    const resultOfBlend: Array<Array<number | null>> = [];
+
+    for (let row = 0; row < this.height / this.pixelSize; row++) {
+      const blendedPixelsRow: Array<number | null> = [];
+      for (let col = 0; col < this.width / this.pixelSize; col++) {
+        let tmpColorBlend: null | number = null;
+        for (let layerIndex = 0; layerIndex < layers.length; layerIndex += 1) {
+          if (layers[layerIndex][row][col] !== undefined && layers[layerIndex][row][col] !== null) {
+            if (layerIndex === 0) {
+              tmpColorBlend = layers[layerIndex][row][col];
+            } else if (tmpColorBlend !== null) {
+              tmpColorBlend = Number(mixColors(tmpColorBlend, layers[layerIndex][row][col]));
+            }
+            blendedPixelsRow[col] = tmpColorBlend;
+          }
+          resultOfBlend[row] = blendedPixelsRow;
+        }
+      }
+    }
+
+    return resultOfBlend;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   render(time: number) {
     const toLinearArrayIndex = (x: number, y: number, width: number, height: number) => (height - y - 1) * width + x;
 
+    const {
+      width, height, pixelSize, realPixels, virtualPixels, ctx, imageData, lastFrameTime,
+    } = this;
+
     performance.mark('start');
 
-    const widthPixelsRatio = this.width / this.pixelSize;
-    const heightPixelsRatio = this.height / this.pixelSize;
+    const widthPixelsRatio = width / pixelSize;
+    const heightPixelsRatio = height / pixelSize;
 
     for (let row = 0; row < heightPixelsRatio; row++) {
-      const rowPixelOffset = row * this.pixelSize;
+      const rowPixelOffset = row * pixelSize;
       for (let col = 0; col < widthPixelsRatio; col++) {
-        const colPixelOffset = col * this.pixelSize;
+        const colPixelOffset = col * pixelSize;
 
-        const virtualPixelIndex = toLinearArrayIndex(
-          col,
-          row,
-          widthPixelsRatio,
-          heightPixelsRatio,
-        );
+        const virtualPixelIndex = toLinearArrayIndex(col, row, widthPixelsRatio, heightPixelsRatio);
 
-        const virtualPixel = this.virtualPixels[virtualPixelIndex];
+        const virtualPixel = virtualPixels[virtualPixelIndex];
 
-        for (let realPixelX = 0; realPixelX < this.pixelSize; realPixelX++) {
+        for (let realPixelX = 0; realPixelX < pixelSize; realPixelX++) {
           const realPixelXConstant = colPixelOffset + realPixelX;
-          for (let realPixelY = 0; realPixelY < this.pixelSize; realPixelY++) {
-            const realPixelIndex = toLinearArrayIndex(
-              realPixelXConstant,
-              rowPixelOffset + realPixelY,
-              this.width,
-              this.height,
-            );
+          for (let realPixelY = 0; realPixelY < pixelSize; realPixelY++) {
+            const realPixelIndex = toLinearArrayIndex(realPixelXConstant, rowPixelOffset + realPixelY, width, height);
 
-            this.realPixels[realPixelIndex] = virtualPixel;
+            realPixels[realPixelIndex] = virtualPixel;
           }
         }
       }
     }
 
-    this.ctx.putImageData(this.imageData, 0, 0);
+    ctx.putImageData(imageData, 0, 0);
 
     performance.mark('end');
     const perf = performance.measure('Measurement', 'start', 'end');
 
-    if (1000 / (performance.now() - this.lastFrameTime) === Infinity) {
+    if (1000 / (performance.now() - lastFrameTime) === Infinity) {
       this.lastFrameTime = performance.now();
     }
 
-    this.ctx.font = '10px serif';
-    this.ctx.fillStyle = 'red';
-    this.ctx.fillText(`FPS: ${(String(1000 / (performance.now() - this.lastFrameTime)).slice(0, 6))}`, 0, 10);
-    this.ctx.fillText(`render: ${(String(perf.duration)).slice(0, 4)}`, 0, 30);
+    ctx.font = '10px serif';
+    ctx.fillStyle = 'red';
+    ctx.fillText(`FPS: ${String(1000 / (performance.now() - lastFrameTime)).slice(0, 6)}`, 0, 10);
+    ctx.fillText(`render: ${String(perf.duration).slice(0, 4)}`, 0, 30);
     this.lastFrameTime = performance.now();
   }
 
