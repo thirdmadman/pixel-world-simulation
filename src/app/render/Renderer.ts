@@ -1,12 +1,5 @@
+import { IPixelsLayer } from '../interfaces/IPixelsLayer';
 import { mixColors } from '../utils/utils';
-
-interface IPixelsLayer {
-  width: number;
-  height: number;
-  x: number;
-  y: number;
-  pixels: Uint32Array;
-}
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -31,6 +24,14 @@ export class Renderer {
 
   private wallColor = 0xff000000;
 
+  private layersMapping: { [key: string]: number } = {
+    physics: 0,
+    ui: 1,
+    crosshair: 2,
+  };
+
+  private layers: Array<IPixelsLayer> = [];
+
   private lastFrameTime = new Date().getTime();
 
   constructor(parentCanvas: HTMLCanvasElement) {
@@ -44,6 +45,73 @@ export class Renderer {
     this.imageData = this.ctx.createImageData(this.width, this.height);
     this.realPixels = new Uint32Array(this.imageData.data.buffer);
     this.virtualPixels = new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize));
+
+    this.initLayers();
+  }
+
+  initLayers() {
+    this.layers.push(
+      {
+        width: this.width / this.pixelSize,
+        height: this.height / this.pixelSize,
+        x: 0,
+        y: 0,
+        pixels: new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize)),
+      },
+      {
+        width: this.width / this.pixelSize,
+        height: this.height / this.pixelSize,
+        x: 0,
+        y: 0,
+        pixels: new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize)),
+      },
+      {
+        width: this.width / this.pixelSize,
+        height: this.height / this.pixelSize,
+        x: 0,
+        y: 0,
+        pixels: new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize)),
+      },
+    );
+  }
+
+  setLayerPixels(name: string, layer: Uint32Array) {
+    const layerIndex = this.layersMapping[name];
+    if (layerIndex === undefined) {
+      return;
+    }
+    this.layers[layerIndex].pixels = layer;
+  }
+
+  updateLayerPosition(name: string, x: number, y: number) {
+    const layerIndex = this.layersMapping[name];
+    if (layerIndex === undefined) {
+      return;
+    }
+    this.layers[layerIndex].x = x;
+    this.layers[layerIndex].y = y;
+  }
+
+  updateLayerSize(name: string, width: number, height: number) {
+    const layerIndex = this.layersMapping[name];
+    if (layerIndex === undefined) {
+      return;
+    }
+    this.layers[layerIndex].width = width;
+    this.layers[layerIndex].height = height;
+  }
+
+  updateLayer(name: string, layer: IPixelsLayer) {
+    const layerIndex = this.layersMapping[name];
+    if (layerIndex === undefined) {
+      return;
+    }
+
+    this.layers[layerIndex].width = layer.width;
+    this.layers[layerIndex].height = layer.height;
+    this.layers[layerIndex].x = layer.x;
+    this.layers[layerIndex].y = layer.y;
+    this.layers[layerIndex].pixels = layer.pixels;
   }
 
   setScreenSize(width: number, height: number) {
@@ -76,6 +144,14 @@ export class Renderer {
 
   getLastFrameTime = () => this.lastFrameTime;
 
+  getPixels() {
+    return this.virtualPixels;
+  }
+
+  setPixels(pixels: Uint32Array) {
+    this.virtualPixels = pixels;
+  }
+
   // eslint-disable-next-line class-methods-use-this
   blendPixelLayers(layers: Array<IPixelsLayer>, width: number, height: number) {
     const toLinearArrayIndex = (x: number, y: number, w: number, h: number) => (h - y - 1) * w + x;
@@ -91,18 +167,39 @@ export class Renderer {
     for (let layerIndex = layers.length - 1; layerIndex >= 0; layerIndex--) {
       const layer = layers[layerIndex];
 
-      // if (layerIndex === layers.length - 1) {
-      //   console.error(layerIndex);
-      // }
+      if (layerIndex === layers.length - 1) {
+        console.error(layerIndex);
+      }
 
       const layerWidth = layer.width;
       const layerHeight = layer.height;
       const layerX = layer.x;
       const layerY = layer.y;
 
-      for (let layerRow = 0; layerRow < layerHeight; layerRow++) {
+      let layerLossLeft = 0;
+      let layerLossRight = 0;
+      let layerLossTop = 0;
+      let layerLossBottom = 0;
+
+      if (layerX < 0) {
+        layerLossLeft = -layerX;
+      }
+
+      if (layerY < 0) {
+        layerLossBottom = -layerY;
+      }
+
+      if (layerHeight - height - layerLossBottom > 0) {
+        layerLossTop = height - layerHeight - layerLossBottom;
+      }
+
+      if (layerWidth - width - layerLossLeft > 0) {
+        layerLossRight = height - layerHeight - layerLossBottom;
+      }
+
+      for (let layerRow = 0 + layerLossBottom; layerRow < layerHeight - layerLossTop; layerRow++) {
         const cyclicCol = (layerHeight - 1 - layerRow) * layerWidth;
-        for (let layerCol = cyclicCol; layerCol < cyclicCol + layerWidth; layerCol++) {
+        for (let layerCol = cyclicCol + layerLossLeft; layerCol < cyclicCol + layerWidth - layerLossRight; layerCol++) {
           const normalizedCol = layerCol - cyclicCol;
 
           const pixelPositionX = layerX + normalizedCol;
@@ -122,24 +219,6 @@ export class Renderer {
       }
     }
 
-    // for (let row = 0; row < this.height / this.pixelSize; row++) {
-    //   const blendedPixelsRow: Array<number | null> = [];
-    //   for (let col = 0; col < this.width / this.pixelSize; col++) {
-    //     let tmpColorBlend: null | number = null;
-    //     for (let layerIndex = 0; layerIndex < layers.length; layerIndex += 1) {
-    //       if (layers[layerIndex][row][col] !== undefined && layers[layerIndex][row][col] !== null) {
-    //         if (layerIndex === 0) {
-    //           tmpColorBlend = layers[layerIndex][row][col];
-    //         } else if (tmpColorBlend !== null) {
-    //           tmpColorBlend = Number(mixColors(tmpColorBlend, layers[layerIndex][row][col]));
-    //         }
-    //         blendedPixelsRow[col] = tmpColorBlend;
-    //       }
-    //       resultOfBlend[row] = blendedPixelsRow;
-    //     }
-    //   }
-    // }
-
     return resultOfBlend;
   }
 
@@ -152,16 +231,19 @@ export class Renderer {
     } = this;
 
     const newLayer: IPixelsLayer = {
-      x: 10,
-      y: 10,
-      width: 1,
+      x: 0,
+      y: 0,
+      width: 2,
       height: 3,
-      pixels: new Uint32Array(1 * 3),
+      pixels: new Uint32Array(2 * 3),
     };
 
-    newLayer.pixels[0] = 0x22000000;
-    newLayer.pixels[1] = 0x22000000;
-    newLayer.pixels[2] = 0x22000000;
+    newLayer.pixels[0] = 0xffff0000;
+    newLayer.pixels[1] = 0xffff0000;
+    newLayer.pixels[2] = 0xff00ff00;
+    newLayer.pixels[3] = 0xff00ff00;
+    newLayer.pixels[4] = 0xff0000ff;
+    newLayer.pixels[5] = 0xff0000ff;
 
     const virtualPixelsLayer: IPixelsLayer = {
       x: 0,
@@ -178,7 +260,6 @@ export class Renderer {
     );
 
     if (!resultVirtualPixels) {
-      console.error('gefdg');
       return;
     }
 
@@ -221,13 +302,5 @@ export class Renderer {
     ctx.fillText(`FPS: ${String(1000 / (performance.now() - lastFrameTime)).slice(0, 6)}`, 0, 10);
     ctx.fillText(`render: ${String(perf.duration).slice(0, 4)}`, 0, 30);
     this.lastFrameTime = performance.now();
-  }
-
-  getPixels() {
-    return this.virtualPixels;
-  }
-
-  setPixels(pixels: Uint32Array) {
-    this.virtualPixels = pixels;
   }
 }
