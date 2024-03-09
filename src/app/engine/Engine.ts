@@ -147,20 +147,21 @@ export class Engine {
     this.ui.setRendererSize(width, height);
   }
 
+  getUi() {
+    return this.ui;
+  }
+
   extractFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
     this.eventsStack.push(...this.ui.collectActions());
 
     this.eventsStack.forEach((el) => el());
     this.eventsStack = [];
 
-    const uiState = this.ui.extractFrame();
-
     const frame = new Uint32Array(frameWidth * frameHeight);
     let frameIndex = (frameHeight - 1) * frameWidth;
     for (let y = framePositionY; y < framePositionY + frameHeight; y += 1) {
       for (let x = framePositionX; x < framePositionX + frameWidth; x += 1) {
-        const uiPixel = uiState[x - framePositionX][y - framePositionY];
-        if (this.gameWorldState[x][y] !== null || uiPixel) {
+        if (this.gameWorldState[x][y] !== null) {
           let newColor: null | number = null;
           if (this.gameWorldState[x][y] !== null) {
             if (this.gameWorldState[x][y]?.unitState) {
@@ -174,11 +175,6 @@ export class Engine {
                 newColor = unitColor;
               }
             }
-          }
-
-          if (uiPixel != null) {
-            const uiColor = uiPixel.color;
-            newColor = Number(mixColors(newColor || 0x0, uiColor));
           }
 
           if (newColor) {

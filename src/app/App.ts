@@ -1,5 +1,6 @@
 import { DataStorage } from './engine/DataStorage';
 import { Engine } from './engine/Engine';
+import { IPixelsLayer } from './interfaces/IPixelsLayer';
 import { IPoint } from './interfaces/IPoint';
 import { Renderer } from './render/Renderer';
 
@@ -149,7 +150,8 @@ export class App {
           case 0:
             this.engine.handleMouseLeftButtonDown(this.virtualMousePosition);
             break;
-          default: console.error(e.button);
+          default:
+            console.error(e.button);
         }
       },
       false,
@@ -162,7 +164,8 @@ export class App {
           case 0:
             this.engine.handleMouseLeftButtonUp(this.virtualMousePosition);
             break;
-          default: console.error(e.button);
+          default:
+            console.error(e.button);
         }
       },
       false,
@@ -245,9 +248,47 @@ export class App {
     this.renderer.setPixels(pixels.fill(0xff000000));
 
     const callRender = (time: number) => {
-      this.renderer.setPixels(
-        this.engine.requestFrame(this.frameWidth, this.frameHeight, this.framePositionX, this.framePositionY),
+      const enginePixels = this.engine.requestFrame(
+        this.frameWidth,
+        this.frameHeight,
+        this.framePositionX,
+        this.framePositionY,
       );
+
+      const newLayer: IPixelsLayer = {
+        x: 0,
+        y: 0,
+        width: 2,
+        height: 3,
+        pixels: new Uint32Array(2 * 3),
+      };
+
+      newLayer.pixels[0] = 0xffff0000;
+      newLayer.pixels[1] = 0xffff0000;
+      newLayer.pixels[2] = 0xff00ff00;
+      newLayer.pixels[3] = 0xff00ff00;
+      newLayer.pixels[4] = 0xff0000ff;
+      newLayer.pixels[5] = 0xff0000ff;
+
+      const engineLayer: IPixelsLayer = {
+        x: 0,
+        y: 0,
+        width: this.frameWidth,
+        height: this.frameHeight,
+        pixels: enginePixels,
+      };
+
+      const uiLayers = this.engine.getUi().getLayers();
+
+      const pixelsToRender = this.renderer.blendPixelLayers(
+        [engineLayer, ...uiLayers, newLayer],
+        this.renderer.getScreenSizeX() / this.renderer.getPixelSize(),
+        this.renderer.getScreenSizeY() / this.renderer.getPixelSize(),
+      );
+
+      if (pixelsToRender !== null) {
+        this.renderer.setPixels(pixelsToRender);
+      }
 
       this.renderer.render(time);
 

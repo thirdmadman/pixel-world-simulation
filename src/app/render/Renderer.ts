@@ -58,20 +58,6 @@ export class Renderer {
         y: 0,
         pixels: new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize)),
       },
-      {
-        width: this.width / this.pixelSize,
-        height: this.height / this.pixelSize,
-        x: 0,
-        y: 0,
-        pixels: new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize)),
-      },
-      {
-        width: this.width / this.pixelSize,
-        height: this.height / this.pixelSize,
-        x: 0,
-        y: 0,
-        pixels: new Uint32Array((this.width / this.pixelSize) * (this.height / this.pixelSize)),
-      },
     );
   }
 
@@ -167,10 +153,6 @@ export class Renderer {
     for (let layerIndex = layers.length - 1; layerIndex >= 0; layerIndex--) {
       const layer = layers[layerIndex];
 
-      if (layerIndex === layers.length - 1) {
-        console.error(layerIndex);
-      }
-
       const layerWidth = layer.width;
       const layerHeight = layer.height;
       const layerX = layer.x;
@@ -213,7 +195,7 @@ export class Renderer {
           if (blendResultPixel === null || blendResultPixel === undefined || blendResultPixel === 0) {
             resultOfBlend[realPositionOfPixel] = layerPixel;
           } else if (layerPixel !== null && layerPixel !== undefined) {
-            resultOfBlend[realPositionOfPixel] = Number(mixColors(blendResultPixel, layerPixel));
+            resultOfBlend[realPositionOfPixel] = Number(mixColors(layerPixel, blendResultPixel));
           }
         }
       }
@@ -230,39 +212,6 @@ export class Renderer {
       width, height, pixelSize, realPixels, virtualPixels, ctx, imageData, lastFrameTime,
     } = this;
 
-    const newLayer: IPixelsLayer = {
-      x: 0,
-      y: 0,
-      width: 2,
-      height: 3,
-      pixels: new Uint32Array(2 * 3),
-    };
-
-    newLayer.pixels[0] = 0xffff0000;
-    newLayer.pixels[1] = 0xffff0000;
-    newLayer.pixels[2] = 0xff00ff00;
-    newLayer.pixels[3] = 0xff00ff00;
-    newLayer.pixels[4] = 0xff0000ff;
-    newLayer.pixels[5] = 0xff0000ff;
-
-    const virtualPixelsLayer: IPixelsLayer = {
-      x: 0,
-      y: 0,
-      width: width / pixelSize,
-      height: height / pixelSize,
-      pixels: virtualPixels,
-    };
-
-    const resultVirtualPixels = this.blendPixelLayers(
-      [virtualPixelsLayer, newLayer],
-      width / pixelSize,
-      height / pixelSize,
-    );
-
-    if (!resultVirtualPixels) {
-      return;
-    }
-
     performance.mark('start');
 
     const widthPixelsRatio = width / pixelSize;
@@ -275,7 +224,7 @@ export class Renderer {
 
         const virtualPixelIndex = toLinearArrayIndex(col, row, widthPixelsRatio, heightPixelsRatio);
 
-        const virtualPixel = resultVirtualPixels[virtualPixelIndex];
+        const virtualPixel = virtualPixels[virtualPixelIndex];
 
         for (let realPixelX = 0; realPixelX < pixelSize; realPixelX++) {
           const realPixelXConstant = colPixelOffset + realPixelX;

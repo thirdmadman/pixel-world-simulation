@@ -2,10 +2,17 @@
 import { IPoint } from '../../interfaces/IPoint';
 import { getUnitTypeByUnitTypeName } from '../../data/UnitTypes';
 import { getNotTransparent } from '../../utils/utils';
+import { IPixelsLayer } from '../../interfaces/IPixelsLayer';
 
 interface UIPixel {
   color: number;
   actionType: string | null;
+}
+
+interface UIPixelsLayer {
+  pixelsLayer: IPixelsLayer;
+  actionToPixels: Array<Array<string | null>> | null;
+  isVisible: boolean;
 }
 
 interface ActionsObject {
@@ -23,7 +30,7 @@ export class UI {
 
   private framePosition: IPoint = { x: 0, y: 0 };
 
-  private UIState: Array<Array<UIPixel | null>> = Array.from(Array(1), () => new Array<UIPixel>(1));
+  // private UIState: Array<Array<UIPixel | null>> = Array.from(Array(1), () => new Array<UIPixel>(1));
 
   private actions: ActionsObject = {};
 
@@ -31,8 +38,65 @@ export class UI {
 
   private eventsStack: Array<() => void> = [];
 
+  private layers: Array<UIPixelsLayer> = [];
+
   constructor(actions: ActionsObject) {
     this.actions = actions;
+    this.initLayers();
+  }
+
+  getCursorPixels() {
+    const pixels = new Uint32Array(9);
+    pixels[1] = 0xff000000;
+    pixels[3] = 0xff000000;
+    pixels[5] = 0xff000000;
+    pixels[7] = 0xff000000;
+    return pixels;
+  }
+
+  initLayers() {
+    this.layers.push(
+      {
+        pixelsLayer: {
+          width: 4,
+          height: 80,
+          x: 4,
+          y: 40,
+          pixels: new Uint32Array(4 * 80),
+        },
+        actionToPixels: null,
+        isVisible: true,
+      },
+      {
+        pixelsLayer: {
+          width: 3,
+          height: 3,
+          x: 0,
+          y: 0,
+          pixels: this.getCursorPixels(),
+        },
+        actionToPixels: null,
+        isVisible: true,
+      },
+    );
+
+    this.drawUI();
+  }
+
+  getLayers() {
+    this.layers[1].pixelsLayer.x = this.mouseUIPosition.x - 1;
+    this.layers[1].pixelsLayer.y = this.mouseUIPosition.y - 1;
+
+    const pixelLayers: Array<IPixelsLayer> = [];
+
+    // Using for loop copy all pixelsLayer from layers which are visible
+    for (let i = 0; i < this.layers.length; i++) {
+      if (this.layers[i].isVisible) {
+        pixelLayers.push(this.layers[i].pixelsLayer);
+      }
+    }
+
+    return pixelLayers;
   }
 
   setRendererSize(width: number, height: number) {
@@ -60,31 +124,53 @@ export class UI {
     return () => {};
   }
 
-  drawCursor() {
-    if (this.mouseUIPosition.x + 1 < this.frameWidth) {
-      this.UIState[this.mouseUIPosition.x + 1][this.mouseUIPosition.y] = { color: 0xff000000, actionType: null };
-    }
-
-    if (this.mouseUIPosition.x - 1 > 0) {
-      this.UIState[this.mouseUIPosition.x - 1][this.mouseUIPosition.y] = { color: 0xff000000, actionType: null };
-    }
-
-    if (this.mouseUIPosition.y + 1 < this.frameHeight) {
-      this.UIState[this.mouseUIPosition.x][this.mouseUIPosition.y + 1] = { color: 0xff000000, actionType: null };
-    }
-
-    if (this.mouseUIPosition.y - 1 > 0) {
-      this.UIState[this.mouseUIPosition.x][this.mouseUIPosition.y - 1] = { color: 0xff000000, actionType: null };
-    }
-  }
-
-  drawRectangle(pixelType: UIPixel, xStart: number, yStart: number, width: number, height: number) {
+  drawRectangleOnLayer(
+    layer: UIPixelsLayer,
+    color: number,
+    xStart: number,
+    yStart: number,
+    width: number,
+    height: number,
+    actionType: null | string = null,
+  ) {
     const xEnd = xStart + width;
     const yEnd = yStart + height;
-    if (xStart < this.frameWidth && yStart < this.frameHeight && xStart >= 0 && yStart >= 0) {
-      for (let x = xStart; x < this.frameWidth && x <= xEnd; x += 1) {
-        for (let y = yStart; y < this.frameHeight && y <= yEnd; y += 1) {
-          this.UIState[x][y] = pixelType;
+
+    const { pixelsLayer, actionToPixels } = layer;
+    const { pixels } = pixelsLayer;
+
+    const pixelsLayerWidth = pixelsLayer.width;
+    const pixelsLayerHeight = pixelsLayer.height;
+
+    if (xStart < pixelsLayerWidth && yStart < pixelsLayerHeight && xStart >= 0 && yStart >= 0) {
+      for (let layerRow = yStart; layerRow < yEnd; layerRow++) {
+        const cyclicCol = (pixelsLayerHeight - 1 - layerRow) * pixelsLayerWidth;
+        for (let layerCol = cyclicCol + xStart; layerCol < cyclicCol + width; layerCol++) {
+          pixels[layerCol] = color;
+        }
+      }
+
+      if (actionType !== null) {
+        if (actionToPixels === null) {
+          const nodes = new Array(pixelsLayerWidth);
+          const copy = new Array(pixelsLayerHeight);
+          // Problematic code
+          for (let i = 0; i < pixelsLayerHeight; i++) {
+            copy[i] = null;
+          }
+
+          for (let i = 0; i < nodes.length; i++) {
+            nodes[i] = copy.slice(0);
+          }
+
+          layer.actionToPixels = nodes;
+        }
+
+        for (let x = xStart; x < xEnd; x += 1) {
+          for (let y = yStart; y < yEnd; y += 1) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            layer.actionToPixels![x][y] = actionType;
+          }
         }
       }
     }
@@ -153,8 +239,17 @@ export class UI {
       const currentX = startX;
       let currentY = startY;
       buttons.forEach((element) => {
-        this.drawRectangle(element, currentX, currentY, buttonSize, buttonSize);
-        currentY -= (buttonSize + buttonSpace);
+        // this.drawRectangle(element, currentX, currentY, buttonSize, buttonSize);
+        this.drawRectangleOnLayer(
+          this.layers[0],
+          element.color,
+          currentX,
+          currentY,
+          buttonSize,
+          buttonSize,
+          element.actionType,
+        );
+        currentY += buttonSize + buttonSpace;
       });
     };
 
@@ -162,8 +257,7 @@ export class UI {
   }
 
   drawUI() {
-    this.drawCreationMenu(4, 120);
-    this.drawCursor();
+    this.drawCreationMenu(0, 0);
   }
 
   handleClickDown(mousePosition: IPoint) {
@@ -178,11 +272,48 @@ export class UI {
 
   collectActions() {
     if (this.isMouseDown) {
-      const actionType = this.UIState[this.mouseUIPosition.x][this.mouseUIPosition.y]?.actionType;
-      if (actionType) {
-        const action = this.findAction(actionType);
-        this.eventsStack.push(() => action(this.mousePosition));
-      } else {
+      const mousePosX = this.mousePosition.x;
+      const mousePosY = this.mousePosition.y;
+
+      let isAnyActionEmitted = false;
+
+      for (let layerIndex = this.layers.length - 1; layerIndex >= 0; layerIndex--) {
+        const layer = this.layers[layerIndex];
+
+        if (!layer.actionToPixels || layer.actionToPixels === null) {
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        let isXInBounds = false;
+        let isYInBounds = false;
+
+        if (mousePosX >= layer.pixelsLayer.x && mousePosX < layer.pixelsLayer.x + layer.pixelsLayer.width) {
+          isXInBounds = true;
+        }
+
+        if (mousePosY >= layer.pixelsLayer.y && mousePosY < layer.pixelsLayer.y + layer.pixelsLayer.height) {
+          isYInBounds = true;
+        }
+
+        if (!isXInBounds || !isYInBounds) {
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        const mouseInLayerX = mousePosX - layer.pixelsLayer.x;
+        const mouseInLayerY = mousePosY - layer.pixelsLayer.y;
+
+        const actionType = layer.actionToPixels[mouseInLayerX][mouseInLayerY];
+
+        if (actionType) {
+          const action = this.findAction(actionType);
+          this.eventsStack.push(() => action(this.mousePosition));
+          isAnyActionEmitted = true;
+        }
+      }
+
+      if (!isAnyActionEmitted) {
         const action = this.findAction('default-action');
         this.eventsStack.push(() => action(this.mousePosition));
       }
@@ -191,23 +322,5 @@ export class UI {
     const result = this.eventsStack;
     this.eventsStack = [];
     return result;
-  }
-
-  extractFrame() {
-    const nodes = new Array(this.frameWidth);
-    const copy = new Array(this.frameHeight);
-    for (let i = 0; i < this.frameHeight; i++) {
-      copy[i] = null;
-    }
-
-    for (let i = 0; i < nodes.length; i++) {
-      nodes[i] = copy.slice(0);
-    }
-
-    this.UIState = nodes as Array<Array<UIPixel | null>>;
-
-    this.drawUI();
-
-    return this.UIState;
   }
 }
