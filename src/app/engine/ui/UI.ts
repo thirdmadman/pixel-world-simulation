@@ -30,8 +30,6 @@ export class UI {
 
   private framePosition: IPoint = { x: 0, y: 0 };
 
-  // private UIState: Array<Array<UIPixel | null>> = Array.from(Array(1), () => new Array<UIPixel>(1));
-
   private actions: ActionsObject = {};
 
   private isMouseDown = false;
@@ -272,8 +270,8 @@ export class UI {
 
   collectActions() {
     if (this.isMouseDown) {
-      const mousePosX = this.mousePosition.x;
-      const mousePosY = this.mousePosition.y;
+      const mousePosX = this.mouseUIPosition.x;
+      const mousePosY = this.mouseUIPosition.y;
 
       let isAnyActionEmitted = false;
 
