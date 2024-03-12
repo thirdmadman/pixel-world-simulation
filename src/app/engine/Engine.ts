@@ -1,3 +1,4 @@
+import { PlayersEngine } from './PlayersEngine';
 /* eslint-disable class-methods-use-this */
 import { PhysicEngine } from './PhysicEngine';
 import { IPoint } from '../interfaces/IPoint';
@@ -37,6 +38,8 @@ export class Engine {
   private gameMaxCountMaterials = 9;
 
   private ui = new UI({});
+
+  private playersEngine = new PlayersEngine();
 
   private eventsStack: Array<() => void> = [];
 
@@ -132,6 +135,7 @@ export class Engine {
     this.framePositionY = y;
 
     this.ui.setFramePosition({ x, y });
+    this.playersEngine.setFramePosition({ x, y });
   }
 
   setMousedPosition(point: IPoint) {
@@ -149,6 +153,138 @@ export class Engine {
 
   getUi() {
     return this.ui;
+  }
+
+  getPlayersEngine() {
+    return this.playersEngine;
+  }
+
+  pushPlayerMoveEvent(direction: string) {
+    const directionToDeltaPosition = {
+      up: { x: 0, y: 1 },
+      down: { x: 0, y: -1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    };
+
+    const deltaPosition = directionToDeltaPosition[direction as keyof typeof directionToDeltaPosition];
+
+    if (!deltaPosition) {
+      return;
+    }
+
+    const player = this.playersEngine.getPlayer(0);
+
+    const playerExistingDesiredPositionX = player.globalPosition.x + player.desiredDeltaPosition.x;
+    const playerExistingDesiredPositionY = player.globalPosition.y + player.desiredDeltaPosition.y;
+
+    const newDesiredPositionX = playerExistingDesiredPositionX + deltaPosition.x;
+    const newDesiredPositionY = playerExistingDesiredPositionY + deltaPosition.y;
+
+    let isMovementPossible = false;
+
+    const playerHeight = player.hitBoxHeight;
+    const playerWidth = player.hitBoxWidth;
+
+    const maxStepHeight = 2;
+
+    if (!this.gameWorldState[newDesiredPositionX]) {
+      return;
+    }
+
+    if (deltaPosition.y < 0) {
+      for (let i = newDesiredPositionX; i < newDesiredPositionX + playerWidth; i++) {
+        if (!this.gameWorldState[i]) {
+          return;
+        }
+
+        const unit = this.gameWorldState[i][newDesiredPositionY];
+
+        if (unit === undefined) {
+          return;
+        }
+
+        if (unit && (unit.getUnitType().unitIsStatic || (!unit.getUnitType().unitIsGas
+        && !unit.getUnitType().unitIsFlame && !unit.getUnitType().unitIsLiquid))) {
+          return;
+        }
+      }
+
+      isMovementPossible = true;
+    } else if (deltaPosition.y > 0) {
+      for (let i = newDesiredPositionX; i < newDesiredPositionX + playerWidth; i++) {
+        if (!this.gameWorldState[i]) {
+          return;
+        }
+
+        const unit = this.gameWorldState[i][newDesiredPositionY + playerHeight - 1];
+
+        if (unit === undefined) {
+          return;
+        }
+
+        if (unit && (unit.getUnitType().unitIsStatic || (!unit.getUnitType().unitIsGas
+        && !unit.getUnitType().unitIsFlame && !unit.getUnitType().unitIsLiquid))) {
+          return;
+        }
+      }
+
+      isMovementPossible = true;
+    } else if (deltaPosition.x > 0) {
+      for (let offsetStepY = 0; offsetStepY <= maxStepHeight; offsetStepY++) {
+        deltaPosition.y = offsetStepY;
+
+        for (let i = newDesiredPositionY + offsetStepY; i < newDesiredPositionY + playerHeight + offsetStepY; i++) {
+          const unit = this.gameWorldState[newDesiredPositionX + playerWidth - 1][i];
+
+          if (unit === undefined) {
+            return;
+          }
+
+          if (unit && (unit.getUnitType().unitIsStatic || (!unit.getUnitType().unitIsGas
+        && !unit.getUnitType().unitIsFlame && !unit.getUnitType().unitIsLiquid))) {
+            break;
+          }
+
+          if (i + 1 >= newDesiredPositionY + playerHeight + offsetStepY) {
+            isMovementPossible = true;
+          }
+        }
+
+        if (isMovementPossible) {
+          break;
+        }
+      }
+    } else if (deltaPosition.x < 0) {
+      for (let offsetStepY = 0; offsetStepY <= maxStepHeight; offsetStepY++) {
+        deltaPosition.y = offsetStepY;
+
+        for (let i = newDesiredPositionY + offsetStepY; i < newDesiredPositionY + playerHeight + offsetStepY; i++) {
+          const unit = this.gameWorldState[newDesiredPositionX][i];
+
+          if (unit === undefined) {
+            return;
+          }
+
+          if (unit && (unit.getUnitType().unitIsStatic || (!unit.getUnitType().unitIsGas
+        && !unit.getUnitType().unitIsFlame && !unit.getUnitType().unitIsLiquid))) {
+            break;
+          }
+
+          if (i + 1 >= newDesiredPositionY + playerHeight + offsetStepY) {
+            isMovementPossible = true;
+          }
+        }
+
+        if (isMovementPossible) {
+          break;
+        }
+      }
+    }
+
+    if (isMovementPossible) {
+      this.playersEngine.addPlayerDeltaPosition(0, deltaPosition);
+    }
   }
 
   extractFrame(frameWidth: number, frameHeight: number, framePositionX: number, framePositionY: number) {
@@ -370,6 +506,7 @@ export class Engine {
           unitState: IUnitState | null,
         ) => this.createUnit(unitType, unitVector, unitState),
       );
+      this.pushPlayerMoveEvent('down');
     }
     return this.extractFrame(frameWidth, frameHeight, framePositionX, framePositionY);
   }

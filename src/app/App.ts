@@ -1,3 +1,4 @@
+import { InputController } from './engine/InputController';
 import { DataStorage } from './engine/DataStorage';
 import { Engine } from './engine/Engine';
 import { IPixelsLayer } from './interfaces/IPixelsLayer';
@@ -30,6 +31,8 @@ export class App {
   private isPause = false;
 
   private dataStorage = new DataStorage();
+
+  private inputController = new InputController();
 
   constructor() {
     this.canvas.classList.add('canvas-renderer');
@@ -171,46 +174,7 @@ export class App {
       false,
     );
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowRight') {
-        if (this.framePositionX < this.worldSideSize - this.frameWidth) {
-          this.framePositionX += 1;
-          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-        }
-      }
-      if (event.key === 'ArrowLeft') {
-        if (this.framePositionX > 0) {
-          this.framePositionX -= 1;
-          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-        }
-      }
-
-      if (event.key === 'ArrowUp') {
-        if (this.framePositionY < this.worldSideSize - this.frameHeight) {
-          this.framePositionY += 1;
-          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-        }
-      }
-      if (event.key === 'ArrowDown') {
-        if (this.framePositionY > 0) {
-          this.framePositionY -= 1;
-          this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-        }
-      }
-      if (event.key === 'Escape') {
-        this.isPause = !this.isPause;
-        this.engine.setPause(this.isPause);
-      }
-      if (event.key === 's') {
-        const engineState = this.engine.getEngineState();
-        this.dataStorage.saveToLocalStorage(engineState);
-      }
-      if (event.key === 'l') {
-        const engineState = this.dataStorage.loadFromLocalStorage();
-        this.engine.setEngineState(engineState);
-      }
-    });
-
+    this.inputController.registerKeyListeners();
     this.renderer = new Renderer(this.canvas);
   }
 
@@ -230,7 +194,6 @@ export class App {
 
     const width = Math.floor(this.renderer.getScreenSizeX() / this.renderer.getPixelSize());
     const height = Math.floor(this.renderer.getScreenSizeY() / this.renderer.getPixelSize());
-    console.error(width, height);
     this.engine.setRendererSize(width, height);
     this.frameWidth = width;
     this.frameHeight = height;
@@ -255,21 +218,6 @@ export class App {
         this.framePositionY,
       );
 
-      const newLayer: IPixelsLayer = {
-        x: 0,
-        y: 0,
-        width: 2,
-        height: 3,
-        pixels: new Uint32Array(2 * 3),
-      };
-
-      newLayer.pixels[0] = 0xffff0000;
-      newLayer.pixels[1] = 0xffff0000;
-      newLayer.pixels[2] = 0xff00ff00;
-      newLayer.pixels[3] = 0xff00ff00;
-      newLayer.pixels[4] = 0xff0000ff;
-      newLayer.pixels[5] = 0xff0000ff;
-
       const engineLayer: IPixelsLayer = {
         x: 0,
         y: 0,
@@ -278,10 +226,83 @@ export class App {
         pixels: enginePixels,
       };
 
+      const clickedKeys = this.inputController.getClickedKeys();
+      const pressedKeys = this.inputController.getPressedKeys();
+
+      if (Object.keys(pressedKeys).length > 0) {
+        const pressKeyToAction = {
+          ArrowRight: () => {
+            if (this.framePositionX < this.worldSideSize - this.frameWidth) {
+              this.framePositionX += 1;
+              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
+            }
+          },
+          ArrowLeft: () => {
+            if (this.framePositionX > 0) {
+              this.framePositionX -= 1;
+              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
+            }
+          },
+          ArrowUp: () => {
+            if (this.framePositionY < this.worldSideSize - this.frameHeight) {
+              this.framePositionY += 1;
+              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
+            }
+          },
+          ArrowDown: () => {
+            if (this.framePositionY > 0) {
+              this.framePositionY -= 1;
+              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
+            }
+          },
+          a: () => this.engine.pushPlayerMoveEvent('left'),
+          s: () => this.engine.pushPlayerMoveEvent('down'),
+          w: () => {
+            this.engine.pushPlayerMoveEvent('up');
+            this.engine.pushPlayerMoveEvent('up');
+          },
+          d: () => this.engine.pushPlayerMoveEvent('right'),
+        };
+
+        Object.keys(pressedKeys).forEach((el) => {
+          const action = pressKeyToAction[el as keyof typeof pressKeyToAction];
+          if (!action || action === undefined || action === null) {
+            return;
+          }
+          action();
+        });
+      }
+
+      if (clickedKeys.length > 0) {
+        const clickKeyToAction = {
+          Escape: () => {
+            this.isPause = !this.isPause;
+            this.engine.setPause(this.isPause);
+          },
+          p: () => {
+            const engineState = this.engine.getEngineState();
+            this.dataStorage.saveToLocalStorage(engineState);
+          },
+          l: () => {
+            const engineState = this.dataStorage.loadFromLocalStorage();
+            this.engine.setEngineState(engineState);
+          },
+        };
+
+        clickedKeys.forEach((el) => {
+          const action = clickKeyToAction[el as keyof typeof clickKeyToAction];
+          if (!action || action === undefined || action === null) {
+            return;
+          }
+          action();
+        });
+      }
+
       const uiLayers = this.engine.getUi().getLayers();
+      const playersEngineLayers = this.engine.getPlayersEngine().getLayers();
 
       const pixelsToRender = this.renderer.blendPixelLayers(
-        [engineLayer, ...uiLayers, newLayer],
+        [engineLayer, ...playersEngineLayers, ...uiLayers],
         this.renderer.getScreenSizeX() / this.renderer.getPixelSize(),
         this.renderer.getScreenSizeY() / this.renderer.getPixelSize(),
       );
