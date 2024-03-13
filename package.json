@@ -10,10 +10,9 @@
     "not dead"
   ],
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack --mode development",
+    "dev": "cross-env NODE_ENV=development webpack serve --mode development",
     "build": "cross-env NODE_ENV=production webpack --mode production",
-    "watch": "cross-env NODE_ENV=development webpack --mode development --watch",
-    "start": "cross-env NODE_ENV=development webpack serve --mode development",
+    "build:dev": "cross-env NODE_ENV=development webpack --mode development",
     "lint": "eslint --ext .ts,.tsx src",
     "fix": "eslint --fix --ext .ts,.tsx src"
   },
