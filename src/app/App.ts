@@ -2,7 +2,6 @@ import { InputController } from './engine/InputController';
 import { DataStorage } from './engine/DataStorage';
 import { Engine } from './engine/Engine';
 import { IPixelsLayer } from './interfaces/IPixelsLayer';
-import { IPoint } from './interfaces/IPoint';
 import { Renderer } from './render/Renderer';
 
 export class App {
@@ -24,10 +23,6 @@ export class App {
 
   private framePositionY = 0;
 
-  private realMousePosition = { x: 0, y: 0 } as IPoint;
-
-  private virtualMousePosition = { x: 0, y: 0 } as IPoint;
-
   private isPause = false;
 
   private dataStorage = new DataStorage();
@@ -42,139 +37,10 @@ export class App {
       appEl.appendChild(this.canvas);
     }
 
-    // const handleMouseLeftButton = (mPos: Point) => this.engine.handleMouseLeftButton(mPos);
-    const handleMouseWheelUp = () => this.engine.handleMouseWheelUp();
-    const handleMouseWheelDown = () => this.engine.handleMouseWheelDown();
-
-    const getMousePos = (canvas: HTMLCanvasElement, e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY,
-      } as IPoint;
-    };
-
-    const getTouchPos = (canvas: HTMLCanvasElement, e: TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      return {
-        x: (touch.clientX - rect.left) * scaleX,
-        y: (touch.clientY - rect.top) * scaleY,
-      };
-    };
-
-    const setCursorPos = (point: IPoint) => {
-      this.realMousePosition = point;
-      const pixelSize = this.renderer.getPixelSize();
-
-      this.virtualMousePosition.x = this.framePositionX + Math.floor(point.x / pixelSize);
-      this.virtualMousePosition.y = this.framePositionY + (this.frameHeight - 1 - Math.floor(point.y / pixelSize));
-
-      this.engine.setMousedPosition(this.virtualMousePosition);
-    };
-
-    this.canvas.addEventListener(
-      'mousemove',
-      (e) => {
-        const mousePos = getMousePos(this.canvas, e);
-        setCursorPos(mousePos);
-      },
-      false,
-    );
-
-    this.canvas.addEventListener(
-      'touchmove',
-      (e) => {
-        const touchPos = getTouchPos(this.canvas, e);
-        setCursorPos(touchPos);
-      },
-      false,
-    );
-
-    this.canvas.addEventListener(
-      'wheel',
-      (e) => {
-        if (-e.deltaY < 0) {
-          handleMouseWheelDown();
-        } else if (-e.deltaY > 0) {
-          handleMouseWheelUp();
-        }
-      },
-      false,
-    );
-
-    // const clickAndHold = (btnEl: HTMLCanvasElement, func: () => void) => {
-    //   let timerId: number;
-    //   const DURATION = 1;
-
-    //   const onMouseDown = (e: MouseEvent | TouchEvent) => {
-    //     if (e.type === 'mousedown' && e instanceof MouseEvent) {
-    //       if (e.button === 0) {
-    //         timerId = window.setInterval(func, DURATION);
-    //       }
-    //     } else if (e instanceof TouchEvent) {
-    //       const touchPos = getTouchPos(this.canvas, e);
-    //       setCursorPos(touchPos);
-    //       timerId = window.setInterval(func, DURATION);
-    //     }
-    //   };
-
-    //   const clearTimer = () => {
-    //     if (timerId) {
-    //       window.clearInterval(timerId);
-    //     }
-    //   };
-
-    //   btnEl.addEventListener('mousedown', onMouseDown);
-    //   btnEl.addEventListener('mouseup', clearTimer);
-    //   btnEl.addEventListener('mouseout', clearTimer);
-    //   btnEl.addEventListener('touchstart', onMouseDown);
-    //   btnEl.addEventListener('touchend', clearTimer);
-
-    //   return () => {
-    //     btnEl.removeEventListener('mousedown', onMouseDown);
-    //     btnEl.removeEventListener('mouseup', clearTimer);
-    //     btnEl.removeEventListener('mouseout', clearTimer);
-    //     btnEl.addEventListener('touchstart', onMouseDown, false);
-    //     btnEl.addEventListener('touchend', clearTimer, false);
-    //   };
-    // };
-
-    // clickAndHold(this.canvas, () => handleMouseLeftButton(this.virtualMousePosition));
-
-    this.canvas.addEventListener(
-      'mousedown',
-      (e) => {
-        switch (e.button) {
-          case 0:
-            this.engine.handleMouseLeftButtonDown(this.virtualMousePosition);
-            break;
-          default:
-            console.error(e.button);
-        }
-      },
-      false,
-    );
-
-    this.canvas.addEventListener(
-      'mouseup',
-      (e) => {
-        switch (e.button) {
-          case 0:
-            this.engine.handleMouseLeftButtonUp(this.virtualMousePosition);
-            break;
-          default:
-            console.error(e.button);
-        }
-      },
-      false,
-    );
-
     this.inputController.registerKeyListeners();
+    this.inputController.registerMouseButtonListeners(this.canvas);
+    this.inputController.registerMouseMoveListeners(this.canvas);
+    this.inputController.registerMouseWheelListener(this.canvas);
     this.renderer = new Renderer(this.canvas);
   }
 
@@ -226,8 +92,41 @@ export class App {
         pixels: enginePixels,
       };
 
+      const cursorPosition = this.inputController.getCursorRealPosition();
+
+      const pixelSize = this.renderer.getPixelSize();
+
+      const virtualCursorPositionX = this.framePositionX + Math.floor(cursorPosition.x / pixelSize);
+      const virtualCursorPositionY = this.framePositionY
+      + (this.frameHeight - 1 - Math.floor(cursorPosition.y / pixelSize));
+
+      const virtualCursorPosition = { x: virtualCursorPositionX, y: virtualCursorPositionY };
+
+      this.engine.setCursorPosition(virtualCursorPosition);
+
+      const mouseWheelDelta = this.inputController.getMouseWheelDelta();
+      if (mouseWheelDelta !== 0) {
+        this.engine.handleMouseWheelDelta(mouseWheelDelta);
+      }
+
       const clickedKeys = this.inputController.getClickedKeys();
       const pressedKeys = this.inputController.getPressedKeys();
+
+      const pressedMouseButtons = this.inputController.getPressedMouseButtons();
+
+      if (Object.keys(pressedMouseButtons).length > 0) {
+        const pressMouseButtonToAction = {
+          0: () => this.engine.handleMouseLeftButtonDown(),
+        };
+
+        Object.keys(pressedMouseButtons).forEach((el) => {
+          const action = pressMouseButtonToAction[el as unknown as keyof typeof pressMouseButtonToAction];
+          if (!action || action === undefined || action === null) {
+            return;
+          }
+          action();
+        });
+      }
 
       if (Object.keys(pressedKeys).length > 0) {
         const pressKeyToAction = {

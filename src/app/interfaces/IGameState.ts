@@ -7,8 +7,8 @@ export interface IGameState {
   framePositionX : number;
   framePositionY : number;
   worldSquareSide : number;
-  mousePosition: IPoint;
-  lastMousePosition: IPoint;
+  cursorPosition: IPoint;
+  lastCursorPosition: IPoint;
   lastUnitId : number;
   gameWorldState: WorldState;
 }

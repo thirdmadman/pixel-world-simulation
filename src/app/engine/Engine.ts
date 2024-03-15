@@ -23,9 +23,9 @@ export class Engine {
 
   private worldSquareSide = 2;
 
-  private mousePosition: IPoint = { x: 0, y: 0 };
+  private cursorPosition: IPoint = { x: 0, y: 0 };
 
-  private lastMousePosition: IPoint = { x: 0, y: 0 };
+  private lastCursorPosition: IPoint = { x: 0, y: 0 };
 
   private lastUnitId = 0;
 
@@ -75,7 +75,7 @@ export class Engine {
       'switch-create-wood-wall': () => { this.unitCreationType = 9; },
       'switch-remove': () => { this.unitCreationType = 5; },
       'switch-ignite': () => { this.unitCreationType = 7; },
-      'default-action': (mousePosition: IPoint) => this.mainAction(mousePosition),
+      'default-action': (cursorPosition: IPoint) => this.mainAction(cursorPosition),
     };
 
     this.ui = new UI(actions);
@@ -106,8 +106,8 @@ export class Engine {
     this.framePositionX = engineState.framePositionX;
     this.framePositionY = engineState.framePositionY;
     this.worldSquareSide = engineState.worldSquareSide;
-    this.mousePosition = engineState.mousePosition;
-    this.lastMousePosition = engineState.lastMousePosition;
+    this.cursorPosition = engineState.cursorPosition;
+    this.lastCursorPosition = engineState.lastCursorPosition;
     this.lastUnitId = 0;
     this.gameWorldState = engineState.gameWorldState;
   }
@@ -119,8 +119,8 @@ export class Engine {
       framePositionX: this.framePositionX,
       framePositionY: this.framePositionY,
       worldSquareSide: this.worldSquareSide,
-      mousePosition: this.mousePosition,
-      lastMousePosition: this.lastMousePosition,
+      cursorPosition: this.cursorPosition,
+      lastCursorPosition: this.lastCursorPosition,
       lastUnitId: this.lastUnitId,
       gameWorldState: this.gameWorldState,
     } as IGameState;
@@ -138,10 +138,10 @@ export class Engine {
     this.playersEngine.setFramePosition({ x, y });
   }
 
-  setMousedPosition(point: IPoint) {
-    this.lastMousePosition = this.mousePosition;
-    this.mousePosition = point;
-    this.ui.setMousePosition(point);
+  setCursorPosition(point: IPoint) {
+    this.lastCursorPosition = this.cursorPosition;
+    this.cursorPosition = point;
+    this.ui.setCursorPosition(point);
   }
 
   setRendererSize(width: number, height: number) {
@@ -149,6 +149,10 @@ export class Engine {
     this.frameHeight = height;
 
     this.ui.setRendererSize(width, height);
+  }
+
+  getLastCursorPosition() {
+    return this.lastCursorPosition;
   }
 
   getUi() {
@@ -325,26 +329,18 @@ export class Engine {
     return frame;
   }
 
-  handleMouseLeftButtonDown(mousePosition: IPoint) {
-    this.ui.handleClickDown(mousePosition);
-    this.lastMousePosition = this.mousePosition;
-    this.mousePosition = mousePosition;
+  handleMouseLeftButtonDown() {
+    this.ui.handleMainButtonClickDown(this.cursorPosition);
   }
 
-  handleMouseLeftButtonUp(mousePosition: IPoint) {
-    this.ui.handleClickUp(mousePosition);
-    this.lastMousePosition = this.mousePosition;
-    this.mousePosition = mousePosition;
-  }
-
-  mainAction(mousePosition: IPoint) {
+  mainAction(cursorPosition: IPoint) {
     const createWrapper = (point: IPoint) => this.createUnitAtPoint(
       point,
       this.unitCreationType,
       this.unitCreationSquareSize,
     );
-    this.drawLine(this.lastMousePosition, mousePosition, createWrapper);
-    // this.createUnitAtPoint(mousePosition, this.unitCreationType, this.unitCreationSquareSize);
+    console.error(this.getLastCursorPosition(), cursorPosition);
+    this.drawLine(this.getLastCursorPosition(), cursorPosition, createWrapper);
   }
 
   drawLine(startPoint: IPoint, endPoint: IPoint, callback: (p: IPoint) => void = () => {}) {
@@ -372,13 +368,14 @@ export class Engine {
     return resultArray;
   }
 
-  handleMouseWheelUp() {
-    if (this.unitCreationSquareSize < this.frameHeight * 2) {
-      this.unitCreationSquareSize += 1;
+  handleMouseWheelDelta(delta: number) {
+    if (delta > 0) {
+      if (this.unitCreationSquareSize < this.frameHeight * 2) {
+        this.unitCreationSquareSize += 1;
+      }
+      return;
     }
-  }
 
-  handleMouseWheelDown() {
     if (this.unitCreationSquareSize > 0) {
       this.unitCreationSquareSize -= 1;
     }
@@ -403,7 +400,7 @@ export class Engine {
     return unit;
   }
 
-  createUnitAtPoint(mousePosition: IPoint, unitType: number, squareSize: number) {
+  createUnitAtPoint(cursorPosition: IPoint, unitType: number, squareSize: number) {
     const generateNewUnit = () => {
       let unitTypeName = 'pure-water';
       switch (unitType) {
@@ -455,8 +452,8 @@ export class Engine {
     };
 
     if (squareSize > 0) {
-      const squareStartX = Math.floor(mousePosition.x / squareSize) * squareSize;
-      const squareStartY = Math.floor(mousePosition.y / squareSize) * squareSize;
+      const squareStartX = Math.floor(cursorPosition.x / squareSize) * squareSize;
+      const squareStartY = Math.floor(cursorPosition.y / squareSize) * squareSize;
 
       for (let y = 0; y < squareSize; y += 1) {
         for (let x = 0; x < squareSize; x += 1) {
@@ -482,13 +479,13 @@ export class Engine {
 
     const generatedUnit = generateNewUnit();
     if (generatedUnit === 'set-on-fire') {
-      if (this.gameWorldState[mousePosition.x][mousePosition.y]
-        && this.gameWorldState[mousePosition.x][mousePosition.y]?.getUnitType().unitIsFlammable) {
+      if (this.gameWorldState[cursorPosition.x][cursorPosition.y]
+        && this.gameWorldState[cursorPosition.x][cursorPosition.y]?.getUnitType().unitIsFlammable) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.gameWorldState[mousePosition.x][mousePosition.y]!.unitState.unitIsOnFire = true;
+        this.gameWorldState[cursorPosition.x][cursorPosition.y]!.unitState.unitIsOnFire = true;
       }
-    } else if (!this.gameWorldState[mousePosition.x][mousePosition.y] || generatedUnit === null) {
-      this.gameWorldState[mousePosition.x][mousePosition.y] = generatedUnit;
+    } else if (!this.gameWorldState[cursorPosition.x][cursorPosition.y] || generatedUnit === null) {
+      this.gameWorldState[cursorPosition.x][cursorPosition.y] = generatedUnit;
       if (generatedUnit !== null) {
         generatedUnit.unitId = this.lastUnitId++;
       }

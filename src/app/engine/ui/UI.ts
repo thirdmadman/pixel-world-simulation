@@ -16,7 +16,7 @@ interface UIPixelsLayer {
 }
 
 interface ActionsObject {
-  [propName: string]: (mousePosition: IPoint) => void;
+  [propName: string]: (cursorPosition: IPoint) => void;
 }
 
 export class UI {
@@ -24,15 +24,15 @@ export class UI {
 
   private frameHeight = 1;
 
-  private mousePosition: IPoint = { x: 0, y: 0 };
+  private cursorPosition: IPoint = { x: 0, y: 0 };
 
-  private mouseUIPosition: IPoint = { x: 0, y: 0 };
+  private cursorUIPosition: IPoint = { x: 0, y: 0 };
 
   private framePosition: IPoint = { x: 0, y: 0 };
 
   private actions: ActionsObject = {};
 
-  private isMouseDown = false;
+  private isMainActionButtonDown = false;
 
   private eventsStack: Array<() => void> = [];
 
@@ -82,12 +82,11 @@ export class UI {
   }
 
   getLayers() {
-    this.layers[1].pixelsLayer.x = this.mouseUIPosition.x - 1;
-    this.layers[1].pixelsLayer.y = this.mouseUIPosition.y - 1;
+    this.layers[1].pixelsLayer.x = this.cursorUIPosition.x - 1;
+    this.layers[1].pixelsLayer.y = this.cursorUIPosition.y - 1;
 
     const pixelLayers: Array<IPixelsLayer> = [];
 
-    // Using for loop copy all pixelsLayer from layers which are visible
     for (let i = 0; i < this.layers.length; i++) {
       if (this.layers[i].isVisible) {
         pixelLayers.push(this.layers[i].pixelsLayer);
@@ -102,16 +101,16 @@ export class UI {
     this.frameHeight = height;
   }
 
-  setMousePosition(mousePosition: IPoint) {
-    this.mousePosition = mousePosition;
-    this.mouseUIPosition.x = mousePosition.x - this.framePosition.x;
-    this.mouseUIPosition.y = mousePosition.y - this.framePosition.y;
+  setCursorPosition(cursorPosition: IPoint) {
+    this.cursorPosition = cursorPosition;
+    this.cursorUIPosition.x = cursorPosition.x - this.framePosition.x;
+    this.cursorUIPosition.y = cursorPosition.y - this.framePosition.y;
   }
 
   setFramePosition(framePosition: IPoint) {
     this.framePosition = framePosition;
-    this.mouseUIPosition.x = this.mousePosition.x - this.framePosition.x;
-    this.mouseUIPosition.y = this.mousePosition.y - this.framePosition.y;
+    this.cursorUIPosition.x = this.cursorPosition.x - this.framePosition.x;
+    this.cursorUIPosition.y = this.cursorPosition.y - this.framePosition.y;
   }
 
   findAction(action: string) {
@@ -258,20 +257,15 @@ export class UI {
     this.drawCreationMenu(0, 0);
   }
 
-  handleClickDown(mousePosition: IPoint) {
-    this.setMousePosition(mousePosition);
-    this.isMouseDown = true;
-  }
-
-  handleClickUp(mousePosition: IPoint) {
-    this.setMousePosition(mousePosition);
-    this.isMouseDown = false;
+  handleMainButtonClickDown(cursorPosition: IPoint) {
+    this.setCursorPosition(cursorPosition);
+    this.isMainActionButtonDown = true;
   }
 
   collectActions() {
-    if (this.isMouseDown) {
-      const mousePosX = this.mouseUIPosition.x;
-      const mousePosY = this.mouseUIPosition.y;
+    if (this.isMainActionButtonDown) {
+      const cursorPosX = this.cursorUIPosition.x;
+      const cursorPosY = this.cursorUIPosition.y;
 
       let isAnyActionEmitted = false;
 
@@ -286,11 +280,11 @@ export class UI {
         let isXInBounds = false;
         let isYInBounds = false;
 
-        if (mousePosX >= layer.pixelsLayer.x && mousePosX < layer.pixelsLayer.x + layer.pixelsLayer.width) {
+        if (cursorPosX >= layer.pixelsLayer.x && cursorPosX < layer.pixelsLayer.x + layer.pixelsLayer.width) {
           isXInBounds = true;
         }
 
-        if (mousePosY >= layer.pixelsLayer.y && mousePosY < layer.pixelsLayer.y + layer.pixelsLayer.height) {
+        if (cursorPosY >= layer.pixelsLayer.y && cursorPosY < layer.pixelsLayer.y + layer.pixelsLayer.height) {
           isYInBounds = true;
         }
 
@@ -299,22 +293,24 @@ export class UI {
           continue;
         }
 
-        const mouseInLayerX = mousePosX - layer.pixelsLayer.x;
-        const mouseInLayerY = mousePosY - layer.pixelsLayer.y;
+        const cursorInLayerX = cursorPosX - layer.pixelsLayer.x;
+        const cursorInLayerY = cursorPosY - layer.pixelsLayer.y;
 
-        const actionType = layer.actionToPixels[mouseInLayerX][mouseInLayerY];
+        const actionType = layer.actionToPixels[cursorInLayerX][cursorInLayerY];
 
         if (actionType) {
           const action = this.findAction(actionType);
-          this.eventsStack.push(() => action(this.mousePosition));
+          this.eventsStack.push(() => action(this.cursorPosition));
           isAnyActionEmitted = true;
         }
       }
 
       if (!isAnyActionEmitted) {
         const action = this.findAction('default-action');
-        this.eventsStack.push(() => action(this.mousePosition));
+        this.eventsStack.push(() => action(this.cursorPosition));
       }
+
+      this.isMainActionButtonDown = false;
     }
 
     const result = this.eventsStack;

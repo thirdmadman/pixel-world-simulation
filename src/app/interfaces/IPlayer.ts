@@ -4,7 +4,7 @@ export interface IPlayer {
   name: string;
   globalPosition: IPoint;
   desiredDeltaPosition: IPoint;
-  mouseGlobalPosition: IPoint;
+  cursorGlobalPosition: IPoint;
   spriteWidth: number;
   spriteHeight: number;
   spriteOffset: IPoint;

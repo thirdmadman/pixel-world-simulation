@@ -19,7 +19,7 @@ export class PlayersEngine {
       name: 'Player0',
       globalPosition: { x: 0, y: 0 },
       desiredDeltaPosition: { x: 0, y: 0 },
-      mouseGlobalPosition: { x: 10, y: 10 },
+      cursorGlobalPosition: { x: 10, y: 10 },
       spriteWidth: 10,
       spriteHeight: 10,
       spriteOffset: { x: 0, y: 0 },
