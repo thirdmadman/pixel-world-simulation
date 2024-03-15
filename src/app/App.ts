@@ -23,11 +23,41 @@ export class App {
 
   private framePositionY = 0;
 
-  private isPause = false;
-
   private dataStorage = new DataStorage();
 
   private inputController = new InputController();
+
+  private clickKeyToAction = {
+    Escape: () => {
+      this.engine.setIsPause(!this.engine.getIsPause());
+    },
+    p: () => {
+      const engineState = this.engine.getEngineState();
+      this.dataStorage.saveToLocalStorage(engineState);
+    },
+    l: () => {
+      const engineState = this.dataStorage.loadFromLocalStorage();
+      this.engine.setEngineState(engineState);
+    },
+  };
+
+  private pressKeyToAction = {
+    ArrowRight: () => this.moveFramePosition(1, 0),
+    ArrowLeft: () => this.moveFramePosition(-1, 0),
+    ArrowUp: () => this.moveFramePosition(0, 1),
+    ArrowDown: () => this.moveFramePosition(0, -1),
+    a: () => this.engine.pushPlayerMoveEvent('left'),
+    s: () => this.engine.pushPlayerMoveEvent('down'),
+    w: () => {
+      this.engine.pushPlayerMoveEvent('up');
+      this.engine.pushPlayerMoveEvent('up');
+    },
+    d: () => this.engine.pushPlayerMoveEvent('right'),
+  };
+
+  private pressMouseButtonToAction = {
+    0: () => this.engine.handleMouseLeftButtonDown(),
+  };
 
   constructor() {
     this.canvas.classList.add('canvas-renderer');
@@ -128,9 +158,7 @@ export class App {
       const pressedMouseButtons = this.inputController.getPressedMouseButtons();
 
       if (Object.keys(pressedMouseButtons).length > 0) {
-        const pressMouseButtonToAction = {
-          0: () => this.engine.handleMouseLeftButtonDown(),
-        };
+        const { pressMouseButtonToAction } = this;
 
         Object.keys(pressedMouseButtons).forEach((el) => {
           const action = pressMouseButtonToAction[el as unknown as keyof typeof pressMouseButtonToAction];
@@ -142,19 +170,7 @@ export class App {
       }
 
       if (Object.keys(pressedKeys).length > 0) {
-        const pressKeyToAction = {
-          ArrowRight: () => this.moveFramePosition(1, 0),
-          ArrowLeft: () => this.moveFramePosition(-1, 0),
-          ArrowUp: () => this.moveFramePosition(0, 1),
-          ArrowDown: () => this.moveFramePosition(0, -1),
-          a: () => this.engine.pushPlayerMoveEvent('left'),
-          s: () => this.engine.pushPlayerMoveEvent('down'),
-          w: () => {
-            this.engine.pushPlayerMoveEvent('up');
-            this.engine.pushPlayerMoveEvent('up');
-          },
-          d: () => this.engine.pushPlayerMoveEvent('right'),
-        };
+        const { pressKeyToAction } = this;
 
         Object.keys(pressedKeys).forEach((el) => {
           const action = pressKeyToAction[el as keyof typeof pressKeyToAction];
@@ -166,20 +182,7 @@ export class App {
       }
 
       if (clickedKeys.length > 0) {
-        const clickKeyToAction = {
-          Escape: () => {
-            this.isPause = !this.isPause;
-            this.engine.setPause(this.isPause);
-          },
-          p: () => {
-            const engineState = this.engine.getEngineState();
-            this.dataStorage.saveToLocalStorage(engineState);
-          },
-          l: () => {
-            const engineState = this.dataStorage.loadFromLocalStorage();
-            this.engine.setEngineState(engineState);
-          },
-        };
+        const { clickKeyToAction } = this;
 
         clickedKeys.forEach((el) => {
           const action = clickKeyToAction[el as keyof typeof clickKeyToAction];

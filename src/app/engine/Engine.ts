@@ -126,8 +126,12 @@ export class Engine {
     } as IGameState;
   }
 
-  setPause(isPause: boolean) {
+  setIsPause(isPause: boolean) {
     this.isPhysicsEnginePause = isPause;
+  }
+
+  getIsPause() {
+    return this.isPhysicsEnginePause;
   }
 
   setFramePosition(x: number, y: number) {
