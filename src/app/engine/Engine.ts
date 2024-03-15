@@ -339,7 +339,6 @@ export class Engine {
       this.unitCreationType,
       this.unitCreationSquareSize,
     );
-    console.error(this.getLastCursorPosition(), cursorPosition);
     this.drawLine(this.getLastCursorPosition(), cursorPosition, createWrapper);
   }
 

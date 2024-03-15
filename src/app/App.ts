@@ -72,6 +72,19 @@ export class App {
     }
   }
 
+  moveFramePosition(x: number, y: number) {
+    if (this.framePositionX <= this.worldSideSize - this.frameWidth + x && this.framePositionX + x >= 0) {
+      this.framePositionX += x;
+      this.engine.setFramePosition(this.framePositionX, this.framePositionY);
+      console.error(x);
+    }
+
+    if (this.framePositionY <= this.worldSideSize - this.frameHeight + y && this.framePositionY + y >= 0) {
+      this.framePositionY += y;
+      this.engine.setFramePosition(this.framePositionX, this.framePositionY);
+    }
+  }
+
   startRender() {
     const pixels = this.renderer.getPixels();
     this.renderer.setPixels(pixels.fill(0xff000000));
@@ -130,30 +143,10 @@ export class App {
 
       if (Object.keys(pressedKeys).length > 0) {
         const pressKeyToAction = {
-          ArrowRight: () => {
-            if (this.framePositionX < this.worldSideSize - this.frameWidth) {
-              this.framePositionX += 1;
-              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-            }
-          },
-          ArrowLeft: () => {
-            if (this.framePositionX > 0) {
-              this.framePositionX -= 1;
-              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-            }
-          },
-          ArrowUp: () => {
-            if (this.framePositionY < this.worldSideSize - this.frameHeight) {
-              this.framePositionY += 1;
-              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-            }
-          },
-          ArrowDown: () => {
-            if (this.framePositionY > 0) {
-              this.framePositionY -= 1;
-              this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-            }
-          },
+          ArrowRight: () => this.moveFramePosition(1, 0),
+          ArrowLeft: () => this.moveFramePosition(-1, 0),
+          ArrowUp: () => this.moveFramePosition(0, 1),
+          ArrowDown: () => this.moveFramePosition(0, -1),
           a: () => this.engine.pushPlayerMoveEvent('left'),
           s: () => this.engine.pushPlayerMoveEvent('down'),
           w: () => {
