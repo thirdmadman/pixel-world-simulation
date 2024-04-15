@@ -64,11 +64,11 @@ export class PlayersEngine {
 
   updatePlayersPosition() {
     this.players.forEach((player) => {
-      if (player.globalPosition.x + player.desiredDeltaPosition.x >= 0) {
+      if (player.desiredDeltaPosition.x !== 0 && player.globalPosition.x + player.desiredDeltaPosition.x >= 0) {
         player.globalPosition.x += player.desiredDeltaPosition.x;
       }
 
-      if (player.globalPosition.y + player.desiredDeltaPosition.y >= 0) {
+      if (player.desiredDeltaPosition.y !== 0 && player.globalPosition.y + player.desiredDeltaPosition.y >= 0) {
         player.globalPosition.y += player.desiredDeltaPosition.y;
       }
 
