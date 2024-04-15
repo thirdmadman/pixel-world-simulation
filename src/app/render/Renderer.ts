@@ -171,12 +171,12 @@ export class Renderer {
         layerLossBottom = -layerY;
       }
 
-      if (layerHeight - height - layerLossBottom > 0) {
-        layerLossTop = height - layerHeight - layerLossBottom;
+      if ((layerHeight - layerLossBottom) - (height - layerY) > 0) {
+        layerLossTop = (layerHeight - layerLossBottom) - (height - layerY);
       }
 
-      if (layerWidth - width - layerLossLeft > 0) {
-        layerLossRight = height - layerHeight - layerLossBottom;
+      if ((layerWidth - layerLossLeft) - (width - layerX) > 0) {
+        layerLossRight = (layerWidth - layerLossLeft) - (width - layerX);
       }
 
       for (let layerRow = 0 + layerLossBottom; layerRow < layerHeight - layerLossTop; layerRow++) {
