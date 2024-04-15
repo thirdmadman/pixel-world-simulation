@@ -103,13 +103,12 @@ export class App {
   }
 
   moveFramePosition(x: number, y: number) {
-    if (this.framePositionX <= this.worldSideSize - this.frameWidth + x && this.framePositionX + x >= 0) {
+    if (this.framePositionX + x <= this.worldSideSize - this.frameWidth && this.framePositionX + x >= 0) {
       this.framePositionX += x;
       this.engine.setFramePosition(this.framePositionX, this.framePositionY);
-      console.error(x);
     }
 
-    if (this.framePositionY <= this.worldSideSize - this.frameHeight + y && this.framePositionY + y >= 0) {
+    if (this.framePositionY + y <= this.worldSideSize - this.frameHeight && this.framePositionY + y >= 0) {
       this.framePositionY += y;
       this.engine.setFramePosition(this.framePositionX, this.framePositionY);
     }
