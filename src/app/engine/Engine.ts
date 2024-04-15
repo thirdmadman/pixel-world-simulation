@@ -243,6 +243,10 @@ export class Engine {
         deltaPosition.y = offsetStepY;
 
         for (let i = newDesiredPositionY + offsetStepY; i < newDesiredPositionY + playerHeight + offsetStepY; i++) {
+          if (!this.gameWorldState[newDesiredPositionX + playerWidth - 1]) {
+            break;
+          }
+
           const unit = this.gameWorldState[newDesiredPositionX + playerWidth - 1][i];
 
           if (unit === undefined) {
@@ -268,6 +272,10 @@ export class Engine {
         deltaPosition.y = offsetStepY;
 
         for (let i = newDesiredPositionY + offsetStepY; i < newDesiredPositionY + playerHeight + offsetStepY; i++) {
+          if (!this.gameWorldState[newDesiredPositionX]) {
+            break;
+          }
+
           const unit = this.gameWorldState[newDesiredPositionX][i];
 
           if (unit === undefined) {
