@@ -114,8 +114,8 @@ export class PhysicEngine {
         const isUpperDiagonalFree = isUpperLeftDiagonalFree && isUpperRightDiagonalFree;
         const isLeftAndRightFree = isLeftFree && isRightFree;
 
-        const isToDestroy = currentWorld[x][y]?.unitTypeName === 'gray-smoke'
-        && currentWorld[x][y + 1]?.getUnitType().unitIsStatic;
+        const isToDestroy = (currentWorld[x][y]?.unitTypeName === 'gray-smoke'
+        && currentWorld[x][y + 1]?.getUnitType().unitIsStatic) || (y + 1 === worldSideSize);
 
         if (isToDestroy) {
           const random = getRandomInt(0, currentWorld[x][y]?.getUnitType().unitDefaultHealth || 1);
