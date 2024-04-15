@@ -313,6 +313,9 @@ export class Engine {
     let frameIndex = (frameHeight - 1) * frameWidth;
     for (let y = framePositionY; y < framePositionY + frameHeight; y += 1) {
       for (let x = framePositionX; x < framePositionX + frameWidth; x += 1) {
+        if (this.gameWorldState[x][y] === undefined) {
+          this.gameWorldState[x][y] = null; // This is dirty hack.
+        }
         if (this.gameWorldState[x][y] !== null) {
           let newColor: null | number = null;
           if (this.gameWorldState[x][y] !== null) {
@@ -413,92 +416,65 @@ export class Engine {
 
   createUnitAtPoint(cursorPosition: IPoint, unitType: number, squareSize: number) {
     const generateNewUnit = () => {
-      let unitTypeName = 'pure-water';
-      switch (unitType) {
-        case 0: {
-          unitTypeName = 'pure-water';
-          break;
-        }
-        case 1: {
-          unitTypeName = 'yellow-sand';
-          break;
-        }
-        case 2: {
-          unitTypeName = 'gray-rock';
-          break;
-        }
+      let unitTypeName = null;
 
-        case 3: {
-          unitTypeName = 'flammable-gas';
-          break;
-        }
-        case 4: {
-          unitTypeName = 'red-blood';
-          break;
-        }
-        case 5: {
-          return null;
-        }
-        case 6: {
-          unitTypeName = 'black-oil';
-          break;
-        }
-        case 7: {
-          return 'set-on-fire';
-        }
-        case 8: {
-          unitTypeName = 'rock-hard';
-          break;
-        }
-        case 9: {
-          unitTypeName = 'wood-wall';
-          break;
-        }
+      if (unitType === 7) {
+        return 'set-on-fire';
+      }
 
-        default:
-          break;
+      const unitNamesMap = ['pure-water', 'yellow-sand', 'gray-rock', 'flammable-gas',
+        'red-blood', null, 'black-oil', null, 'rock-hard', 'wood-wall'];
+
+      if (unitType > unitNamesMap.length) {
+        return null;
+      }
+
+      unitTypeName = unitNamesMap[unitType];
+
+      if (unitTypeName === null) {
+        return null;
       }
 
       return new Unit(unitTypeName, null, 0);
     };
 
-    if (squareSize > 0) {
-      const squareStartX = Math.floor(cursorPosition.x / squareSize) * squareSize;
-      const squareStartY = Math.floor(cursorPosition.y / squareSize) * squareSize;
-
-      for (let y = 0; y < squareSize; y += 1) {
-        for (let x = 0; x < squareSize; x += 1) {
-          const generatedUnit = generateNewUnit();
-          if (squareStartX + x < this.worldSquareSide && squareStartY + y < this.worldSquareSide) {
-            if (generatedUnit === 'set-on-fire') {
-              if (this.gameWorldState[squareStartX + x][squareStartY + y]
-                && this.gameWorldState[squareStartX + x][squareStartY + y]?.getUnitType().unitIsFlammable) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                this.gameWorldState[squareStartX + x][squareStartY + y]!.unitState.unitIsOnFire = true;
-              }
-            } else if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
-              this.gameWorldState[squareStartX + x][squareStartY + y] = generatedUnit;
-              if (generatedUnit !== null) {
-                generatedUnit.unitId = this.lastUnitId++;
-              }
-            }
-          }
+    if (squareSize <= 0) {
+      const generatedUnit = generateNewUnit();
+      if (generatedUnit === 'set-on-fire') {
+        if (this.gameWorldState[cursorPosition.x][cursorPosition.y]
+          && this.gameWorldState[cursorPosition.x][cursorPosition.y]?.getUnitType().unitIsFlammable) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          this.gameWorldState[cursorPosition.x][cursorPosition.y]!.unitState.unitIsOnFire = true;
+        }
+      } else if (!this.gameWorldState[cursorPosition.x][cursorPosition.y] || generatedUnit === null) {
+        this.gameWorldState[cursorPosition.x][cursorPosition.y] = generatedUnit;
+        if (generatedUnit !== null) {
+          generatedUnit.unitId = this.lastUnitId++;
         }
       }
       return;
     }
 
-    const generatedUnit = generateNewUnit();
-    if (generatedUnit === 'set-on-fire') {
-      if (this.gameWorldState[cursorPosition.x][cursorPosition.y]
-        && this.gameWorldState[cursorPosition.x][cursorPosition.y]?.getUnitType().unitIsFlammable) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.gameWorldState[cursorPosition.x][cursorPosition.y]!.unitState.unitIsOnFire = true;
-      }
-    } else if (!this.gameWorldState[cursorPosition.x][cursorPosition.y] || generatedUnit === null) {
-      this.gameWorldState[cursorPosition.x][cursorPosition.y] = generatedUnit;
-      if (generatedUnit !== null) {
-        generatedUnit.unitId = this.lastUnitId++;
+    const squareStartX = Math.floor(cursorPosition.x / squareSize) * squareSize;
+    const squareStartY = Math.floor(cursorPosition.y / squareSize) * squareSize;
+
+    for (let y = 0; y < squareSize; y += 1) {
+      for (let x = 0; x < squareSize; x += 1) {
+        const generatedUnit = generateNewUnit();
+        if (squareStartX + x < this.worldSquareSide && squareStartY + y < this.worldSquareSide) {
+          if (generatedUnit === 'set-on-fire') {
+            if (this.gameWorldState[squareStartX + x][squareStartY + y]
+              && this.gameWorldState[squareStartX + x][squareStartY + y]?.getUnitType().unitIsFlammable) {
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              this.gameWorldState[squareStartX + x][squareStartY + y]!.unitState.unitIsOnFire = true;
+            }
+          } else if (!this.gameWorldState[squareStartX + x][squareStartY + y] || generatedUnit === null) {
+            this.gameWorldState[squareStartX + x][squareStartY + y] = generatedUnit;
+            if (generatedUnit !== null) {
+              generatedUnit.unitId = this.lastUnitId++;
+            }
+          }
+        }
       }
     }
   }
