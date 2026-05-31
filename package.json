@@ -33,7 +33,7 @@
     "@types/webpack-dev-server": "^4.7.1",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
     "@typescript-eslint/parser": "^7.6.0",
-    "@vitest/coverage-v8": "^1.5.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^14.0.0",
     "cross-env": "^7.0.3",
@@ -55,7 +55,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "vitest": "^1.5.0",
+    "vitest": "^4.1.7",
     "webpack": "^5.107.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.4"
